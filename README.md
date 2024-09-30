@@ -1,11 +1,18 @@
 # Vircadia World Server
 
-<!-- brew install caddy -->
+## Installation
 
-### Core Supabase Project
+### Caddy
 
-Configurations for the core Supabase project are found in `/src/server/modules/supabase/app/supabase/config.toml`.
+#### macOS
 
-### Client-Server Mutations
+```bash
+brew install caddy
+```
 
-Configurations for client-server mutations are found in 
+#### Linux
+
+```bash
+sudo apt install caddy
+```
+
