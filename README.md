@@ -4,18 +4,16 @@
 
 ### Supabase CLI
 
-You need a relatively new version of `npm` so we can use the `npx` commands.
-
 #### macOS
 
 ```bash
-brew upgrade supabase
+brew upgrade supabase/tap/supabase
 ```
 
 #### Linux
 
 ```bash
-brew upgrade supabase
+brew upgrade supabase/tap/supabase
 ```
 
 ### Deno
