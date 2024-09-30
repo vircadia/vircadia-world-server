@@ -1,5 +1,5 @@
-import { log } from '../../../shared/modules/general/log.ts';
-import { Server } from '../../../shared/modules/vircadia-world-meta/meta/meta.ts';
+import { log } from "../general/log.ts";
+import { Server } from "../vircadia-world-meta/typescript/meta.ts";
 
 export interface ProxyConfig {
     subdomain: string; // e.g., "general.localhost", "supabase.localhost"
@@ -14,7 +14,7 @@ export class CaddyManager {
     private port: number;
 
     private constructor() {
-        this.caddyfilePath = './modules/caddy/tmp/Caddyfile';
+        this.caddyfilePath = "./modules/caddy/tmp/Caddyfile";
         this.port = 3010; // Default port, can be made configurable
     }
 
@@ -39,7 +39,7 @@ export class CaddyManager {
         proxyConfigs: Record<Server.E_ProxySubdomain, ProxyConfig>;
         debug: boolean;
     }): Promise<void> {
-        let caddyfileContent = '';
+        let caddyfileContent = "";
 
         if (data.debug) {
             caddyfileContent += `{
@@ -76,18 +76,20 @@ export class CaddyManager {
 
         // Create subdomain configurations
         for (const [subdomain, configs] of Object.entries(configsBySubdomain)) {
-            if (subdomain !== 'general.localhost') {
-                caddyfileContent += `    @${subdomain.replace('.', '_')
-                    } host ${subdomain}
+            if (subdomain !== "general.localhost") {
+                caddyfileContent += `    @${
+                    subdomain.replace(".", "_")
+                } host ${subdomain}
 `;
                 for (const config of configs) {
                     log({
                         message:
                             `Creating Caddy route for ${subdomain} to ${config.to}`,
-                        type: 'info',
+                        type: "info",
                     });
-                    caddyfileContent += `    reverse_proxy @${subdomain.replace('.', '_')
-                        } ${config.to}
+                    caddyfileContent += `    reverse_proxy @${
+                        subdomain.replace(".", "_")
+                    } ${config.to}
 `;
                 }
             }
@@ -98,30 +100,30 @@ export class CaddyManager {
         await Deno.writeTextFile(this.caddyfilePath, caddyfileContent);
         log({
             message: `Caddyfile created at ${this.caddyfilePath}`,
-            type: 'info',
+            type: "info",
         });
     }
 
     private async startCaddy(data: { debug: boolean }): Promise<void> {
         const args = [
-            'run',
-            '--config',
+            "run",
+            "--config",
             this.caddyfilePath,
-            '--adapter',
-            'caddyfile',
+            "--adapter",
+            "caddyfile",
         ];
 
-        const caddyCommand = new Deno.Command('caddy', {
+        const caddyCommand = new Deno.Command("caddy", {
             args,
-            stdout: 'piped',
-            stderr: 'piped',
+            stdout: "piped",
+            stderr: "piped",
         });
 
         this.caddyProcess = caddyCommand.spawn();
 
         log({
-            message: 'Caddy server started',
-            type: 'info',
+            message: "Caddy server started",
+            type: "info",
         });
 
         // Handle Caddy output
@@ -134,7 +136,7 @@ export class CaddyManager {
                         if (message) {
                             log({
                                 message,
-                                type: 'info',
+                                type: "info",
                             });
                         }
                     },
@@ -148,11 +150,11 @@ export class CaddyManager {
 
     public async stop(): Promise<void> {
         if (this.caddyProcess) {
-            this.caddyProcess.kill('SIGTERM');
+            this.caddyProcess.kill("SIGTERM");
             this.caddyProcess = null;
             log({
-                message: 'Caddy server stopped',
-                type: 'info',
+                message: "Caddy server stopped",
+                type: "info",
             });
         }
     }

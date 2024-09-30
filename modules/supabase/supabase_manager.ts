@@ -1,13 +1,13 @@
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import { log } from '../../../shared/modules/general/log.ts';
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { log } from "../general/log.ts";
 
-const CONFIG_TOML_FILE = 'config.toml';
+const CONFIG_TOML_FILE = "config.toml";
 
 export class SupabaseError extends Error {
     constructor(message: string) {
         super(message);
-        this.name = 'SupabaseError';
+        this.name = "SupabaseError";
     }
 }
 
@@ -19,8 +19,8 @@ export class Supabase {
     private debug: boolean;
 
     constructor(debug: boolean = false) {
-        this.appDir = path.resolve('./modules/supabase/app');
-        this.configDir = path.join(this.appDir, 'supabase');
+        this.appDir = path.resolve("./modules/supabase/app");
+        this.configDir = path.join(this.appDir, "supabase");
         this.debug = debug;
 
         this.loadConfig();
@@ -41,30 +41,30 @@ export class Supabase {
 
     async initializeAndStart(data: { forceRestart: boolean }): Promise<void> {
         log({
-            message: 'Initializing and starting Supabase...',
-            type: 'info',
+            message: "Initializing and starting Supabase...",
+            type: "info",
             debug: this.debug,
         });
 
         try {
             // Check if Supabase CLI is installed.
             try {
-                const command = new Deno.Command('npx', {
-                    args: ['supabase', '--version'],
+                const command = new Deno.Command("npx", {
+                    args: ["supabase", "--version"],
                     cwd: this.appDir,
-                    stdout: 'piped',
+                    stdout: "piped",
                 });
                 const { stdout } = await command.output();
                 const output = new TextDecoder().decode(stdout)
                     .trim();
                 log({
                     message: `Supabase CLI version: ${output}`,
-                    type: 'success',
+                    type: "success",
                     debug: this.debug,
                 });
             } catch (error) {
                 throw new SupabaseError(
-                    'Supabase CLI is not installed. Please install it first.',
+                    "Supabase CLI is not installed. Please install it first.",
                 );
             }
             await this.initializeProjectIfNeeded();
@@ -73,15 +73,15 @@ export class Supabase {
             log({
                 message:
                     `Failed to initialize and start Supabase: ${error.message}`,
-                type: 'error',
+                type: "error",
                 debug: this.debug,
             });
             throw error;
         }
 
         log({
-            message: 'Supabase initialization and startup complete.',
-            type: 'success',
+            message: "Supabase initialization and startup complete.",
+            type: "success",
             debug: this.debug,
         });
     }
@@ -91,24 +91,24 @@ export class Supabase {
         try {
             await fs.access(configPath);
             log({
-                message: 'Supabase project already initialized.',
-                type: 'success',
+                message: "Supabase project already initialized.",
+                type: "success",
                 debug: this.debug,
             });
         } catch {
             log({
                 message:
-                    'Supabase project not initialized. Initializing now...',
-                type: 'info',
+                    "Supabase project not initialized. Initializing now...",
+                type: "info",
                 debug: this.debug,
             });
             await this.runSupabaseCommand({
-                command: 'init',
+                command: "init",
                 appendWorkdir: true,
             });
             log({
-                message: 'Supabase project initialized.',
-                type: 'success',
+                message: "Supabase project initialized.",
+                type: "success",
                 debug: this.debug,
             });
         }
@@ -117,24 +117,24 @@ export class Supabase {
     private async startSupabase(forceRestart: boolean): Promise<void> {
         if (forceRestart) {
             log({
-                message: 'Stopping Supabase services for a forced restart...',
-                type: 'info',
+                message: "Stopping Supabase services for a forced restart...",
+                type: "info",
                 debug: this.debug,
             });
             await this.stopSupabase();
         } else if (await this.isStarting()) {
             log({
                 message:
-                    'Supabase is already starting up. Waiting for it to complete...',
-                type: 'info',
+                    "Supabase is already starting up. Waiting for it to complete...",
+                type: "info",
                 debug: this.debug,
             });
             await this.waitForStartup();
             return;
         } else if (!(await this.isRunning())) {
             log({
-                message: 'Supabase services are not running. Starting them...',
-                type: 'info',
+                message: "Supabase services are not running. Starting them...",
+                type: "info",
                 debug: this.debug,
             });
             await this.stopSupabase();
@@ -142,23 +142,23 @@ export class Supabase {
 
         try {
             log({
-                message: 'Starting Supabase services...',
-                type: 'info',
+                message: "Starting Supabase services...",
+                type: "info",
                 debug: this.debug,
             });
             await this.runSupabaseCommand({
-                command: 'start',
+                command: "start",
                 appendWorkdir: true,
             });
             log({
-                message: 'Supabase services started successfully.',
-                type: 'success',
+                message: "Supabase services started successfully.",
+                type: "success",
                 debug: this.debug,
             });
         } catch (error) {
             log({
                 message: `Failed to start Supabase: ${error.message}`,
-                type: 'error',
+                type: "error",
                 debug: this.debug,
             });
             throw error;
@@ -167,45 +167,45 @@ export class Supabase {
 
     private async stopSupabase(): Promise<void> {
         log({
-            message: 'Stopping Supabase services...',
-            type: 'info',
+            message: "Stopping Supabase services...",
+            type: "info",
             debug: this.debug,
         });
         try {
             await this.runSupabaseCommand({
-                command: 'stop',
+                command: "stop",
                 appendWorkdir: true,
             });
             log({
-                message: 'Supabase services stopped.',
-                type: 'success',
+                message: "Supabase services stopped.",
+                type: "success",
                 debug: this.debug,
             });
         } catch (error) {
             log({
                 message: `Failed to stop Supabase: ${error.message}`,
-                type: 'warning',
+                type: "warning",
                 debug: this.debug,
             });
         }
     }
 
     async isRunning(): Promise<boolean> {
-        const CONTAINS_IF_WORKING = 'API URL:';
+        const CONTAINS_IF_WORKING = "API URL:";
         log({
-            message: 'Checking if Supabase is running...',
-            type: 'debug',
+            message: "Checking if Supabase is running...",
+            type: "debug",
             debug: this.debug,
         });
         try {
             const output = await this.runSupabaseCommand({
-                command: 'status',
+                command: "status",
                 appendWorkdir: true,
                 suppressError: true,
             });
             log({
                 message: `Supabase status: ${output}`,
-                type: 'debug',
+                type: "debug",
                 debug: this.debug,
             });
             return output.includes(CONTAINS_IF_WORKING);
@@ -216,15 +216,15 @@ export class Supabase {
 
     private async isStarting(): Promise<boolean> {
         try {
-            const command = new Deno.Command('docker', {
-                args: ['ps', '--format', '{{.Names}}'],
+            const command = new Deno.Command("docker", {
+                args: ["ps", "--format", "{{.Names}}"],
                 cwd: this.appDir,
-                stdout: 'piped',
+                stdout: "piped",
             });
             const { stdout } = await command.output();
             const output = new TextDecoder().decode(stdout);
             return (
-                output.includes('supabase_db_app') && !(await this.isRunning())
+                output.includes("supabase_db_app") && !(await this.isRunning())
             );
         } catch (error) {
             return false;
@@ -239,7 +239,7 @@ export class Supabase {
                 return;
             }
             if (Date.now() - startTime >= timeout) {
-                throw new Error('Timeout waiting for Supabase to start');
+                throw new Error("Timeout waiting for Supabase to start");
             }
             await new Promise((resolve) => {
                 setTimeout(resolve, 5000);
@@ -255,23 +255,24 @@ export class Supabase {
         appendWorkdir: boolean;
         suppressError?: boolean;
     }): Promise<string> {
-        const fullCommand = `npx supabase ${data.command}${data.appendWorkdir ? ` --workdir ${this.appDir}` : ''
-            }`;
+        const fullCommand = `npx supabase ${data.command}${
+            data.appendWorkdir ? ` --workdir ${this.appDir}` : ""
+        }`;
 
         try {
-            const command = new Deno.Command('npx', {
+            const command = new Deno.Command("npx", {
                 args: [
-                    'supabase',
-                    ...data.command.split(' '),
-                    ...(data.appendWorkdir ? ['--workdir', this.appDir] : []),
+                    "supabase",
+                    ...data.command.split(" "),
+                    ...(data.appendWorkdir ? ["--workdir", this.appDir] : []),
                 ],
                 cwd: this.appDir,
                 env: {
                     ...Deno.env.toObject(),
-                    SUPABASE_DEBUG: this.debug ? '1' : '0',
+                    SUPABASE_DEBUG: this.debug ? "1" : "0",
                 },
-                stdout: 'piped',
-                stderr: 'piped',
+                stdout: "piped",
+                stderr: "piped",
             });
 
             const { stdout, stderr } = await command.output();
@@ -281,14 +282,14 @@ export class Supabase {
             if (errorOutput && !data.suppressError) {
                 log({
                     message: `Command stderr: ${errorOutput}`,
-                    type: 'warning',
+                    type: "warning",
                     debug: this.debug,
                 });
             }
 
             log({
                 message: `Command stdout: ${output}`,
-                type: 'debug',
+                type: "debug",
                 debug: this.debug,
             });
 
@@ -297,13 +298,14 @@ export class Supabase {
             if (!data.suppressError) {
                 log({
                     message: `Error executing command: ${fullCommand}`,
-                    type: 'error',
+                    type: "error",
                     debug: this.debug,
                 });
                 log({
-                    message: `Full error details: ${JSON.stringify(error, null, 2)
-                        }`,
-                    type: 'error',
+                    message: `Full error details: ${
+                        JSON.stringify(error, null, 2)
+                    }`,
+                    type: "error",
                     debug: this.debug,
                 });
             }
@@ -313,64 +315,67 @@ export class Supabase {
 
     async debugStatus(): Promise<void> {
         log({
-            message: 'Running Supabase debug commands...',
-            type: 'info',
+            message: "Running Supabase debug commands...",
+            type: "info",
             debug: this.debug,
         });
         try {
             const status = await this.runSupabaseCommand({
-                command: 'status --debug',
+                command: "status --debug",
                 appendWorkdir: true,
             });
             log({
                 message: `Supabase Status (Debug): ${status}`,
-                type: 'info',
+                type: "info",
                 debug: this.debug,
             });
 
-            const dockerPs = new Deno.Command('docker', {
-                args: ['ps', '-a'],
+            const dockerPs = new Deno.Command("docker", {
+                args: ["ps", "-a"],
                 cwd: this.appDir,
-                stdout: 'piped',
+                stdout: "piped",
             });
             const { stdout: dockerPsOutput } = await dockerPs.output();
             log({
-                message: `Docker Containers: ${new TextDecoder().decode(dockerPsOutput)
-                    }`,
-                type: 'info',
+                message: `Docker Containers: ${
+                    new TextDecoder().decode(dockerPsOutput)
+                }`,
+                type: "info",
                 debug: this.debug,
             });
 
-            const dockerLogs = new Deno.Command('docker', {
-                args: ['logs', 'supabase_db_app'],
+            const dockerLogs = new Deno.Command("docker", {
+                args: ["logs", "supabase_db_app"],
                 cwd: this.appDir,
-                stdout: 'piped',
+                stdout: "piped",
             });
             const { stdout: dockerLogsOutput } = await dockerLogs.output();
             log({
-                message: `Supabase DB App Logs: ${new TextDecoder().decode(dockerLogsOutput)
-                    }`,
-                type: 'info',
+                message: `Supabase DB App Logs: ${
+                    new TextDecoder().decode(dockerLogsOutput)
+                }`,
+                type: "info",
                 debug: this.debug,
             });
 
-            const dockerInspect = new Deno.Command('docker', {
-                args: ['inspect', 'supabase_db_app'],
+            const dockerInspect = new Deno.Command("docker", {
+                args: ["inspect", "supabase_db_app"],
                 cwd: this.appDir,
-                stdout: 'piped',
+                stdout: "piped",
             });
             const { stdout: dockerInspectOutput } = await dockerInspect
                 .output();
             log({
-                message: `Supabase DB App Inspect: ${new TextDecoder().decode(dockerInspectOutput)
-                    }`,
-                type: 'info',
+                message: `Supabase DB App Inspect: ${
+                    new TextDecoder().decode(dockerInspectOutput)
+                }`,
+                type: "info",
                 debug: this.debug,
             });
         } catch (error) {
             log({
                 message: `Error running debug commands: ${error}`,
-                type: 'error',
+                type: "error",
                 debug: this.debug,
             });
         }
@@ -396,26 +401,26 @@ export class Supabase {
         s3SecretKey: string | null;
         s3Region: string | null;
     }> {
-        const API_URL = 'API URL';
-        const GRAPHQL_URL = 'GraphQL URL';
-        const S3_STORAGE_URL = 'S3 Storage URL';
-        const DB_URL = 'DB URL';
-        const STUDIO_URL = 'Studio URL';
-        const INBUCKET_URL = 'Inbucket URL';
-        const JWT_SECRET = 'JWT secret';
-        const ANON_KEY = 'anon key';
-        const SERVICE_ROLE_KEY = 'service_role key';
-        const S3_ACCESS_KEY = 'S3 Access Key';
-        const S3_SECRET_KEY = 'S3 Secret Key';
-        const S3_REGION = 'S3 Region';
+        const API_URL = "API URL";
+        const GRAPHQL_URL = "GraphQL URL";
+        const S3_STORAGE_URL = "S3 Storage URL";
+        const DB_URL = "DB URL";
+        const STUDIO_URL = "Studio URL";
+        const INBUCKET_URL = "Inbucket URL";
+        const JWT_SECRET = "JWT secret";
+        const ANON_KEY = "anon key";
+        const SERVICE_ROLE_KEY = "service_role key";
+        const S3_ACCESS_KEY = "S3 Access Key";
+        const S3_SECRET_KEY = "S3 Secret Key";
+        const S3_REGION = "S3 Region";
 
         const output = await this.runSupabaseCommand({
-            command: 'status',
+            command: "status",
             appendWorkdir: true,
         });
 
         const parseValue = (key: string): string | null => {
-            const regex = new RegExp(`${key}:\\s*(.+)`, 'u');
+            const regex = new RegExp(`${key}:\\s*(.+)`, "u");
             const match = output.match(regex);
             return match ? match[1].trim() : null;
         };
@@ -424,16 +429,16 @@ export class Supabase {
             url: string | null,
         ): { host: string; port: number; path: string } => {
             if (!url) {
-                return { host: '', port: 0, path: '' };
+                return { host: "", port: 0, path: "" };
             }
             const parsedUrl = new URL(url);
             let path = parsedUrl.pathname + parsedUrl.search;
             // Remove trailing slash if present
-            path = path.endsWith('/') ? path.slice(0, -1) : path;
+            path = path.endsWith("/") ? path.slice(0, -1) : path;
             return {
                 host: parsedUrl.hostname,
                 port: parseInt(parsedUrl.port, 10) ||
-                    (parsedUrl.protocol === 'https:' ? 443 : 80),
+                    (parsedUrl.protocol === "https:" ? 443 : 80),
                 path,
             };
         };
@@ -449,22 +454,22 @@ export class Supabase {
         } => {
             if (!url) {
                 return {
-                    user: '',
-                    password: '',
-                    host: '',
+                    user: "",
+                    password: "",
+                    host: "",
                     port: 0,
-                    database: '',
+                    database: "",
                 };
             }
             const regex = /postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/;
             const match = url.match(regex);
             if (!match) {
                 return {
-                    user: '',
-                    password: '',
-                    host: '',
+                    user: "",
+                    password: "",
+                    host: "",
                     port: 0,
-                    database: '',
+                    database: "",
                 };
             }
             return {
