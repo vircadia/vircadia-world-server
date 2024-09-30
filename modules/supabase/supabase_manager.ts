@@ -13,24 +13,27 @@ export class SupabaseError extends Error {
 
 export class Supabase {
     private static instance: Supabase | null = null;
+    private static debugMode: boolean = false;
 
     private appDir: string;
     private configDir: string;
-    private debug: boolean;
 
-    constructor(debug: boolean = false) {
+    private constructor() {
         this.appDir = path.resolve("./modules/supabase/app");
         this.configDir = path.join(this.appDir, "supabase");
-        this.debug = debug;
-
         this.loadConfig();
     }
 
     public static getInstance(debug: boolean = false): Supabase {
         if (!Supabase.instance) {
-            Supabase.instance = new Supabase(debug);
+            Supabase.instance = new Supabase();
         }
+        Supabase.debugMode = debug;
         return Supabase.instance;
+    }
+
+    public static isDebug(): boolean {
+        return Supabase.debugMode;
     }
 
     private loadConfig(): void {
@@ -43,24 +46,20 @@ export class Supabase {
         log({
             message: "Initializing and starting Supabase...",
             type: "info",
-            debug: this.debug,
+            debug: Supabase.isDebug(),
         });
 
         try {
             // Check if Supabase CLI is installed.
             try {
-                const command = new Deno.Command("npx", {
-                    args: ["supabase", "--version"],
-                    cwd: this.appDir,
-                    stdout: "piped",
+                const output = await this.runSupabaseCommand({
+                    command: "--version",
+                    appendWorkdir: false,
                 });
-                const { stdout } = await command.output();
-                const output = new TextDecoder().decode(stdout)
-                    .trim();
                 log({
                     message: `Supabase CLI version: ${output}`,
                     type: "success",
-                    debug: this.debug,
+                    debug: Supabase.isDebug(),
                 });
             } catch (error) {
                 throw new SupabaseError(
@@ -74,7 +73,7 @@ export class Supabase {
                 message:
                     `Failed to initialize and start Supabase: ${error.message}`,
                 type: "error",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
             throw error;
         }
@@ -82,7 +81,7 @@ export class Supabase {
         log({
             message: "Supabase initialization and startup complete.",
             type: "success",
-            debug: this.debug,
+            debug: Supabase.isDebug(),
         });
     }
 
@@ -93,14 +92,14 @@ export class Supabase {
             log({
                 message: "Supabase project already initialized.",
                 type: "success",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
         } catch {
             log({
                 message:
                     "Supabase project not initialized. Initializing now...",
                 type: "info",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
             await this.runSupabaseCommand({
                 command: "init",
@@ -109,7 +108,7 @@ export class Supabase {
             log({
                 message: "Supabase project initialized.",
                 type: "success",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
         }
     }
@@ -119,7 +118,7 @@ export class Supabase {
             log({
                 message: "Stopping Supabase services for a forced restart...",
                 type: "info",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
             await this.stopSupabase();
         } else if (await this.isStarting()) {
@@ -127,7 +126,7 @@ export class Supabase {
                 message:
                     "Supabase is already starting up. Waiting for it to complete...",
                 type: "info",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
             await this.waitForStartup();
             return;
@@ -135,17 +134,26 @@ export class Supabase {
             log({
                 message: "Supabase services are not running. Starting them...",
                 type: "info",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
             await this.stopSupabase();
+        } else {
+            log({
+                message:
+                    "Supabase services are already running. Skipping start.",
+                type: "info",
+                debug: Supabase.isDebug(),
+            });
+            return;
         }
 
+        log({
+            message: "Starting Supabase services...",
+            type: "info",
+            debug: Supabase.isDebug(),
+        });
+
         try {
-            log({
-                message: "Starting Supabase services...",
-                type: "info",
-                debug: this.debug,
-            });
             await this.runSupabaseCommand({
                 command: "start",
                 appendWorkdir: true,
@@ -153,13 +161,13 @@ export class Supabase {
             log({
                 message: "Supabase services started successfully.",
                 type: "success",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
         } catch (error) {
             log({
                 message: `Failed to start Supabase: ${error.message}`,
                 type: "error",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
             throw error;
         }
@@ -169,7 +177,7 @@ export class Supabase {
         log({
             message: "Stopping Supabase services...",
             type: "info",
-            debug: this.debug,
+            debug: Supabase.isDebug(),
         });
         try {
             await this.runSupabaseCommand({
@@ -179,13 +187,13 @@ export class Supabase {
             log({
                 message: "Supabase services stopped.",
                 type: "success",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
         } catch (error) {
             log({
                 message: `Failed to stop Supabase: ${error.message}`,
                 type: "warning",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
         }
     }
@@ -195,38 +203,76 @@ export class Supabase {
         log({
             message: "Checking if Supabase is running...",
             type: "debug",
-            debug: this.debug,
+            debug: Supabase.isDebug(),
         });
         try {
+            log({
+                message: "Executing 'supabase status' command...",
+                type: "debug",
+                debug: Supabase.isDebug(),
+            });
             const output = await this.runSupabaseCommand({
                 command: "status",
                 appendWorkdir: true,
                 suppressError: true,
             });
             log({
-                message: `Supabase status: ${output}`,
+                message: `Supabase status command output: ${output}`,
                 type: "debug",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
-            return output.includes(CONTAINS_IF_WORKING);
+            const isRunning = output.includes(CONTAINS_IF_WORKING);
+            log({
+                message: `Supabase is ${isRunning ? "running" : "not running"}`,
+                type: "debug",
+                debug: Supabase.isDebug(),
+            });
+            return isRunning;
         } catch (error) {
+            log({
+                message: `Error checking if Supabase is running: ${error}`,
+                type: "error",
+                debug: Supabase.isDebug(),
+            });
             return false;
         }
     }
 
-    private async isStarting(): Promise<boolean> {
+    private async isStarting(timeout: number = 5000): Promise<boolean> {
+        const commandPromise = async () => {
+            try {
+                const command = new Deno.Command("docker", {
+                    args: ["ps", "--format", "{{.Names}}"],
+                    cwd: this.appDir,
+                    stdout: "piped",
+                });
+                const { stdout } = await command.output();
+                const output = new TextDecoder().decode(stdout);
+                return output.includes("supabase_db_app") &&
+                    !(await this.isRunning());
+            } catch (error) {
+                log({
+                    message:
+                        `Error in checking to see if Supabase is starting: ${error}`,
+                    type: "error",
+                    debug: Supabase.isDebug(),
+                });
+                return false;
+            }
+        };
+
+        const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error("isStarting timeout")), timeout);
+        });
+
         try {
-            const command = new Deno.Command("docker", {
-                args: ["ps", "--format", "{{.Names}}"],
-                cwd: this.appDir,
-                stdout: "piped",
-            });
-            const { stdout } = await command.output();
-            const output = new TextDecoder().decode(stdout);
-            return (
-                output.includes("supabase_db_app") && !(await this.isRunning())
-            );
+            return await Promise.race([commandPromise(), timeoutPromise]);
         } catch (error) {
+            log({
+                message: `Supabase is starting timed out: ${error}`,
+                type: "error",
+                debug: Supabase.isDebug(),
+            });
             return false;
         }
     }
@@ -255,24 +301,36 @@ export class Supabase {
         appendWorkdir: boolean;
         suppressError?: boolean;
     }): Promise<string> {
-        const fullCommand = `npx supabase ${data.command}${
-            data.appendWorkdir ? ` --workdir ${this.appDir}` : ""
-        }`;
+        const args = [
+            ...data.command.split(" "),
+            ...(data.appendWorkdir ? ["--workdir", this.appDir] : []),
+        ];
+
+        log({
+            message: `Executing command: supabase ${args.join(" ")}`,
+            type: "debug",
+            debug: Supabase.isDebug(),
+        });
 
         try {
-            const command = new Deno.Command("npx", {
-                args: [
-                    "supabase",
-                    ...data.command.split(" "),
-                    ...(data.appendWorkdir ? ["--workdir", this.appDir] : []),
-                ],
-                cwd: this.appDir,
-                env: {
-                    ...Deno.env.toObject(),
-                    SUPABASE_DEBUG: this.debug ? "1" : "0",
+            const command = new Deno.Command(
+                "supabase",
+                {
+                    args: args,
+                    cwd: this.appDir,
+                    env: {
+                        ...Deno.env.toObject(),
+                        SUPABASE_DEBUG: Supabase.isDebug() ? "1" : "0",
+                    },
+                    stdout: "piped",
+                    stderr: "piped",
                 },
-                stdout: "piped",
-                stderr: "piped",
+            );
+
+            log({
+                message: "Awaiting command output...",
+                type: "debug",
+                debug: Supabase.isDebug(),
             });
 
             const { stdout, stderr } = await command.output();
@@ -283,33 +341,37 @@ export class Supabase {
                 log({
                     message: `Command stderr: ${errorOutput}`,
                     type: "warning",
-                    debug: this.debug,
+                    debug: Supabase.isDebug(),
                 });
             }
 
             log({
                 message: `Command stdout: ${output}`,
                 type: "debug",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
 
             return output.trim();
         } catch (error) {
             if (!data.suppressError) {
                 log({
-                    message: `Error executing command: ${fullCommand}`,
+                    message: `Error executing command: supabase ${
+                        args.join(" ")
+                    }`,
                     type: "error",
-                    debug: this.debug,
+                    debug: Supabase.isDebug(),
                 });
                 log({
                     message: `Full error details: ${
                         JSON.stringify(error, null, 2)
                     }`,
                     type: "error",
-                    debug: this.debug,
+                    debug: Supabase.isDebug(),
                 });
             }
-            throw new SupabaseError(`Command failed: ${fullCommand}`);
+            throw new SupabaseError(
+                `Command failed: supabase ${args.join(" ")}`,
+            );
         }
     }
 
@@ -317,7 +379,7 @@ export class Supabase {
         log({
             message: "Running Supabase debug commands...",
             type: "info",
-            debug: this.debug,
+            debug: Supabase.isDebug(),
         });
         try {
             const status = await this.runSupabaseCommand({
@@ -327,7 +389,7 @@ export class Supabase {
             log({
                 message: `Supabase Status (Debug): ${status}`,
                 type: "info",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
 
             const dockerPs = new Deno.Command("docker", {
@@ -341,7 +403,7 @@ export class Supabase {
                     new TextDecoder().decode(dockerPsOutput)
                 }`,
                 type: "info",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
 
             const dockerLogs = new Deno.Command("docker", {
@@ -355,7 +417,7 @@ export class Supabase {
                     new TextDecoder().decode(dockerLogsOutput)
                 }`,
                 type: "info",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
 
             const dockerInspect = new Deno.Command("docker", {
@@ -370,13 +432,13 @@ export class Supabase {
                     new TextDecoder().decode(dockerInspectOutput)
                 }`,
                 type: "info",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
         } catch (error) {
             log({
                 message: `Error running debug commands: ${error}`,
                 type: "error",
-                debug: this.debug,
+                debug: Supabase.isDebug(),
             });
         }
     }

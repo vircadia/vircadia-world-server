@@ -12,5 +12,9 @@
       "no-namespace": "off",
       "no-module-namespace": "off"
     }
+  },
+  "imports": {
+    "zod": "npm:zod@latest",
+    "supabase": "npm:@supabase/supabase@latest"
   }
 }
