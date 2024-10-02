@@ -1,25 +1,26 @@
 import { createClient } from "jsr:@supabase/supabase-js";
 import { Supabase } from "../modules/supabase/supabase_manager.ts";
+import { World } from "../modules/vircadia-world-meta/typescript/meta.ts";
 
 const SEED_COUNT = 10000; // Number of world_gltf entries to seed
 const UPDATE_COUNT = 1000; // Number of updates to perform
 
-function generateRandomWorldGLTF() {
+function generateRandomWorldGLTF(): World.I_WorldGLTF {
+    const now = new Date();
     return {
+        vircadia_uuid: crypto.randomUUID(),
         name: `World ${crypto.randomUUID()}`,
         version: "1.0.0",
-        metadata: { description: "A test world" },
+        created_at: now,
+        updated_at: now,
+        metadata: { description: "A randomly generated world" },
         asset: { version: "2.0" },
         extras: {
             vircadia: {
-                name: `Vircadia World ${crypto.randomUUID()}`,
-                uuid: crypto.randomUUID(),
+                name: `World ${crypto.randomUUID()}`,
                 version: "1.0.0",
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                babylonjs: {
-                    // Add any required BabylonJS properties here
-                },
+                createdAt: now,
+                updatedAt: now,
             },
         },
     };
@@ -45,6 +46,35 @@ Deno.test("Supabase DB Benchmark", async () => {
     const supabaseKey = status.anonKey || "";
     const client = createClient(supabaseUrl, supabaseKey);
     console.log("Supabase client created");
+
+    // Sign in with the test user
+    const testUserPassword = Deno.env.get("TEST_USER_PASSWORD");
+    if (!testUserPassword) {
+        console.error(
+            "TEST_USER_PASSWORD environment variable is not set.",
+        );
+        return;
+    }
+    const testUserEmail = Deno.env.get("TEST_USER_EMAIL");
+    if (!testUserEmail) {
+        console.error(
+            "TEST_USER_EMAIL environment variable is not set.",
+        );
+        return;
+    }
+
+    const { data: authData, error: authError } = await client.auth
+        .signInWithPassword({
+            email: testUserEmail,
+            password: testUserPassword,
+        });
+
+    if (authError) {
+        console.error("Error signing in:", authError);
+        return;
+    }
+
+    console.log("Signed in as test user");
 
     // Seed the database
     console.log(`Seeding ${SEED_COUNT} world_gltf entries...`);

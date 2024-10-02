@@ -18,7 +18,6 @@ BEGIN
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "uuid": { "type": "string" },
           "version": { "type": "string" },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" },
@@ -83,7 +82,7 @@ BEGIN
             }
           }
         },
-        "required": ["name", "uuid", "version", "createdAt", "updatedAt", "babylonjs"]
+        "required": ["name", "version", "createdAt", "updatedAt", "babylonjs"]
       }
     },
     "required": ["vircadia"]
@@ -91,7 +90,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
--- World glTF extras schema (includes mutations)
+-- World glTF extras schema
 CREATE OR REPLACE FUNCTION world_gltf_extras_schema() RETURNS json AS $$
 DECLARE
   base_schema json;
@@ -104,26 +103,15 @@ BEGIN
       'vircadia', json_build_object(
         'type', 'object',
         'properties', json_build_object(
-          'babylonjs', json_build_object(
-            'type', 'object',
-            'properties', json_build_object(
-              'mutations', json_build_object(
-                'type', 'array',
-                'items', json_build_object(
-                  'type', 'object',
-                  'properties', json_build_object(
-                    'type', json_build_object('type', 'string', 'enum', array['add', 'update', 'delete']),
-                    'script', json_build_object('type', 'string'),
-                    'unitTest', json_build_object('type', 'string')
-                  ),
-                  'required', array['type', 'script', 'unitTest']
-                )
-              )
-            )
-          )
-        )
+          'name', json_build_object('type', 'string'),
+          'version', json_build_object('type', 'string'),
+          'createdAt', json_build_object('type', 'string', 'format', 'date-time'),
+          'updatedAt', json_build_object('type', 'string', 'format', 'date-time')
+        ),
+        'required', array['name', 'version', 'createdAt', 'updatedAt']
       )
-    )
+    ),
+    'required', array['vircadia']
   );
   RETURN json_build_object(
     'allOf', json_build_array(base_schema, world_specific)

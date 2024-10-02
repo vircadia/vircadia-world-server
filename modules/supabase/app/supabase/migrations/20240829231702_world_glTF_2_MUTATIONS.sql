@@ -84,7 +84,7 @@ RETURNS UUID AS $$
 DECLARE
   new_id UUID;
 BEGIN
-  IF NOT (is_admin() OR is_test_runner()) THEN
+  IF NOT (is_admin()) THEN
     RAISE EXCEPTION 'Only admins can create world_gltf entries';
   END IF;
 
@@ -130,7 +130,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION delete_world_gltf(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
-  IF NOT (is_admin() OR is_test_runner()) THEN
+  IF NOT (is_admin()) THEN
     RAISE EXCEPTION 'Only admins can delete world_gltf entries';
   END IF;
 
@@ -140,9 +140,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- RLS for world_gltf
 CREATE POLICY world_gltf_select_policy ON world_gltf FOR SELECT USING (true);
-CREATE POLICY world_gltf_insert_policy ON world_gltf FOR INSERT WITH CHECK (is_admin() OR is_test_runner());
-CREATE POLICY world_gltf_update_policy ON world_gltf FOR UPDATE USING (is_admin() OR is_test_runner());
-CREATE POLICY world_gltf_delete_policy ON world_gltf FOR DELETE USING (is_admin() OR is_test_runner());
+CREATE POLICY world_gltf_insert_policy ON world_gltf FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_update_policy ON world_gltf FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_delete_policy ON world_gltf FOR DELETE USING (is_admin());
 
 -- Scenes
 
