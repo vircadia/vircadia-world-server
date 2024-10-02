@@ -92,30 +92,23 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 
 -- World glTF extras schema
 CREATE OR REPLACE FUNCTION world_gltf_extras_schema() RETURNS json AS $$
-DECLARE
-  base_schema json;
-  world_specific json;
 BEGIN
-  base_schema := (SELECT common_extras_schema());
-  world_specific := json_build_object(
-    'type', 'object',
-    'properties', json_build_object(
-      'vircadia', json_build_object(
-        'type', 'object',
-        'properties', json_build_object(
-          'name', json_build_object('type', 'string'),
-          'version', json_build_object('type', 'string'),
-          'createdAt', json_build_object('type', 'string', 'format', 'date-time'),
-          'updatedAt', json_build_object('type', 'string', 'format', 'date-time')
-        ),
-        'required', array['name', 'version', 'createdAt', 'updatedAt']
-      )
-    ),
-    'required', array['vircadia']
-  );
-  RETURN json_build_object(
-    'allOf', json_build_array(base_schema, world_specific)
-  );
+  RETURN '{
+    "type": "object",
+    "properties": {
+      "vircadia": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["name", "version", "createdAt", "updatedAt"]
+      }
+    },
+    "required": ["vircadia"]
+  }'::json;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 

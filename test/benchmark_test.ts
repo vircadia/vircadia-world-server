@@ -1,23 +1,26 @@
+import * as SupabaseTypes from "jsr:@supabase/supabase-js";
 import { createClient } from "jsr:@supabase/supabase-js";
 import { Supabase } from "../modules/supabase/supabase_manager.ts";
 import { World } from "../modules/vircadia-world-meta/typescript/meta.ts";
 
 const SEED_COUNT = 10000; // Number of world_gltf entries to seed
 const UPDATE_COUNT = 1000; // Number of updates to perform
+const TEST_PREFIX = "INTERNAL_TEST_";
 
 function generateRandomWorldGLTF(): World.I_WorldGLTF {
     const now = new Date();
+    const uuid = crypto.randomUUID();
     return {
-        vircadia_uuid: crypto.randomUUID(),
-        name: `World ${crypto.randomUUID()}`,
+        vircadia_uuid: uuid,
+        name: `${TEST_PREFIX}World ${uuid}`,
         version: "1.0.0",
         created_at: now,
         updated_at: now,
-        metadata: { description: "A randomly generated world" },
+        metadata: { description: "A randomly generated world for testing" },
         asset: { version: "2.0" },
         extras: {
             vircadia: {
-                name: `World ${crypto.randomUUID()}`,
+                name: `${TEST_PREFIX}World ${uuid}`,
                 version: "1.0.0",
                 createdAt: now,
                 updatedAt: now,
@@ -76,66 +79,72 @@ Deno.test("Supabase DB Benchmark", async () => {
 
     console.log("Signed in as test user");
 
-    // Seed the database
-    console.log(`Seeding ${SEED_COUNT} world_gltf entries...`);
-    const seedStart = performance.now();
-    const seedData = Array.from(
-        { length: SEED_COUNT },
-        generateRandomWorldGLTF,
-    );
-    const { data: seededData, error: seedError } = await client
-        .from("world_gltf")
-        .insert(seedData)
-        .select();
-    if (seedError) {
-        console.error("Error seeding data:", seedError);
-        return;
-    }
-    const seedEnd = performance.now();
-    console.log(`Seeding completed in ${seedEnd - seedStart}ms`);
+    let channel: SupabaseTypes.RealtimeChannel | null = null;
 
-    // Set up real-time subscription
-    console.log("Setting up real-time subscription...");
-    const channel = client
-        .channel("world_gltf_changes")
-        .on("postgres_changes", {
-            event: "UPDATE",
-            schema: "public",
-            table: "world_gltf",
-        }, (payload) => {
-            console.log("Change received:", payload);
-        })
-        .subscribe();
-
-    // Perform updates and measure time
-    console.log(`Performing ${UPDATE_COUNT} updates...`);
-    const updateStart = performance.now();
-    let updateCount = 0;
-    for (let i = 0; i < UPDATE_COUNT; i++) {
-        const randomIndex = Math.floor(Math.random() * seededData.length);
-        const worldToUpdate = seededData[randomIndex];
-        const { data, error } = await client
+    try {
+        // Seed the database
+        console.log(`Seeding ${SEED_COUNT} world_gltf entries...`);
+        const seedStart = performance.now();
+        const seedData = Array.from(
+            { length: SEED_COUNT },
+            generateRandomWorldGLTF,
+        );
+        const { data: seededData, error: seedError } = await client
             .from("world_gltf")
-            .update({ name: `Updated World ${i}` })
-            .eq("vircadia_uuid", worldToUpdate.vircadia_uuid);
-        if (!error) updateCount++;
-    }
-    const updateEnd = performance.now();
-    console.log(`Updates completed in ${updateEnd - updateStart}ms`);
-    console.log(`Successfully updated ${updateCount} entries`);
+            .insert(seedData)
+            .select();
+        if (seedError) {
+            throw new Error(`Error seeding data: ${seedError.message}`);
+        }
+        const seedEnd = performance.now();
+        console.log(`Seeding completed in ${seedEnd - seedStart}ms`);
 
-    // Clean up
-    await channel.unsubscribe();
+        // Set up real-time subscription
+        console.log("Setting up real-time subscription...");
+        channel = client
+            .channel("world_gltf_changes")
+            .on("postgres_changes", {
+                event: "UPDATE",
+                schema: "public",
+                table: "world_gltf",
+            }, (payload) => {
+                console.log("Change received:", payload);
+            })
+            .subscribe();
 
-    console.log("Cleaning up seeded data...");
-    const { error: cleanupError } = await client
-        .from("world_gltf")
-        .delete()
-        .in("vircadia_uuid", seededData.map((world) => world.vircadia_uuid));
-    if (cleanupError) {
-        console.error("Error cleaning up data:", cleanupError);
-    } else {
+        // Perform updates and measure time
+        console.log(`Performing ${UPDATE_COUNT} updates...`);
+        const updateStart = performance.now();
+        let updateCount = 0;
+        for (let i = 0; i < UPDATE_COUNT; i++) {
+            const randomIndex = Math.floor(Math.random() * seededData.length);
+            const worldToUpdate = seededData[randomIndex];
+            const { data, error } = await client
+                .from("world_gltf")
+                .update({ name: `${TEST_PREFIX}Updated World ${i}` })
+                .eq("vircadia_uuid", worldToUpdate.vircadia_uuid);
+            if (!error) updateCount++;
+        }
+        const updateEnd = performance.now();
+        console.log(`Updates completed in ${updateEnd - updateStart}ms`);
+        console.log(`Successfully updated ${updateCount} entries`);
+
+        // Clean up
+        console.log("Cleaning up seeded data...");
+        const { error: cleanupError } = await client
+            .from("world_gltf")
+            .delete()
+            .like("name", `${TEST_PREFIX}%`);
+        if (cleanupError) {
+            throw new Error(`Error cleaning up data: ${cleanupError.message}`);
+        }
         console.log("Cleanup completed");
+    } catch (error) {
+        console.error("Test failed:", error.message);
+    } finally {
+        // Cleanup resources
+        await channel?.unsubscribe();
+        client.removeAllChannels();
     }
 
     console.log("Supabase DB Benchmark test completed");
