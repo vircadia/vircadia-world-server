@@ -128,7 +128,9 @@ Deno.test("Supabase DB Benchmark", async () => {
         const updateEnd = performance.now();
         console.log(`Updates completed in ${updateEnd - updateStart}ms`);
         console.log(`Successfully updated ${updateCount} entries`);
-
+    } catch (error) {
+        console.error("Test failed:", error.message);
+    } finally {
         // Clean up
         console.log("Cleaning up seeded data...");
         const { error: cleanupError } = await client
@@ -136,15 +138,19 @@ Deno.test("Supabase DB Benchmark", async () => {
             .delete()
             .like("name", `${TEST_PREFIX}%`);
         if (cleanupError) {
-            throw new Error(`Error cleaning up data: ${cleanupError.message}`);
+            console.error(`Error cleaning up data: ${cleanupError.message}`);
+        } else {
+            console.log("Cleanup completed");
         }
-        console.log("Cleanup completed");
-    } catch (error) {
-        console.error("Test failed:", error.message);
-    } finally {
+
         // Cleanup resources
-        await channel?.unsubscribe();
-        client.removeAllChannels();
+        if (channel) {
+            await channel.unsubscribe();
+        }
+        await client.removeAllChannels();
+        client.realtime.disconnect();
+        await client.auth.signOut();
+        console.log("Signed out and cleaned up resources");
     }
 
     console.log("Supabase DB Benchmark test completed");
