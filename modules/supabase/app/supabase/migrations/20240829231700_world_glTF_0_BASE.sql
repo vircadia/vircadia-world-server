@@ -7,6 +7,37 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Enable pg_jsonschema extension for JSON schema validation
 CREATE EXTENSION IF NOT EXISTS pg_jsonschema WITH SCHEMA extensions;
 
+
+--
+--
+-- TEST
+--
+--
+
+-- Create test_runner role
+CREATE ROLE test_runner;
+
+-- Create test_runner user
+-- Note: In a real-world scenario, you'd want to use a secure method to set the password,
+-- such as environment variables or a secure secret management system
+CREATE USER test_runner_user WITH PASSWORD 'your_secure_password_here';
+
+-- Grant test_runner role to test_runner_user
+GRANT test_runner TO test_runner_user;
+
+-- Grant necessary permissions to test_runner role
+GRANT USAGE ON SCHEMA public TO test_runner;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO test_runner;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO test_runner;
+
+-- Create a function to check if the current user is a test runner
+CREATE OR REPLACE FUNCTION is_test_runner()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN (SELECT rolname FROM pg_roles WHERE rolname = current_user) = 'test_runner';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 --
 --
 -- USERS
@@ -396,6 +427,10 @@ FOR EACH ROW EXECUTE FUNCTION update_modified_column();
 CREATE TRIGGER update_skins_modtime
 BEFORE UPDATE ON skins
 FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+
+-- Ensure test_runner has access to all created tables
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO test_runner;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO test_runner;
 
 -- Enable RLS for all tables
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;

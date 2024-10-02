@@ -19,7 +19,10 @@ export class Supabase {
     private configDir: string;
 
     private constructor() {
-        this.appDir = path.resolve("./modules/supabase/app");
+        // Get the directory of the current module
+        const currentDir = new URL(".", import.meta.url).pathname;
+        // Set appDir to the 'app' directory next to this file
+        this.appDir = path.resolve(currentDir, "app");
         this.configDir = path.join(this.appDir, "supabase");
         this.loadConfig();
     }
@@ -63,7 +66,8 @@ export class Supabase {
                 });
             } catch (error) {
                 throw new SupabaseError(
-                    "Supabase CLI is not installed. Please install it first.",
+                    "Supabase CLI is not installed. Please install it first, error: " +
+                        error.message,
                 );
             }
             await this.initializeProjectIfNeeded();
