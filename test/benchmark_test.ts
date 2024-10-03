@@ -3,34 +3,135 @@ import { createClient } from "jsr:@supabase/supabase-js";
 import { Supabase } from "../modules/supabase/supabase_manager.ts";
 import { World } from "../modules/vircadia-world-meta/typescript/meta.ts";
 
-const SEED_COUNT = 10000; // Number of world_gltf entries to seed
-const UPDATE_COUNT = 1000; // Number of updates to perform
+// Constants
+const NUM_CLIENTS = 500;
+const NUM_ZONES = 50;
+const NODES_PER_ZONE = 10;
+const ZONES_PER_CLIENT = 5;
+const UPDATES_PER_SECOND = 30;
+const BENCHMARK_DURATION = 60; // seconds
 const TEST_PREFIX = "INTERNAL_TEST_";
 
-function generateRandomWorldGLTF(): World.I_WorldGLTF {
-    const now = new Date();
-    const uuid = crypto.randomUUID();
+// Calculate total number of nodes
+const TOTAL_NODES = NUM_ZONES * NODES_PER_ZONE;
+
+// Utility functions
+function shuffleArray<T>(array: T[]): T[] {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Node generation
+function generateRandomNode(
+    worldId: string,
+    nodeIndex: number,
+): World.I_Node {
+    const nodeUuid = crypto.randomUUID();
     return {
-        vircadia_uuid: uuid,
-        name: `${TEST_PREFIX}World ${uuid}`,
-        version: "1.0.0",
-        created_at: now,
-        updated_at: now,
-        metadata: { description: "A randomly generated world for testing" },
-        asset: { version: "2.0" },
+        vircadia_uuid: nodeUuid,
+        vircadia_world_uuid: worldId,
+        name: `${TEST_PREFIX}node_${nodeIndex}`,
+        translation: [
+            Math.random() * 1000,
+            Math.random() * 1000,
+            Math.random() * 1000,
+        ],
         extras: {
             vircadia: {
-                name: `${TEST_PREFIX}World ${uuid}`,
+                name: `Node ${nodeIndex}`,
                 version: "1.0.0",
-                createdAt: now,
-                updatedAt: now,
+                createdAt: new Date(),
+                updatedAt: new Date(),
             },
         },
     };
 }
 
-Deno.test("Supabase DB Benchmark", async () => {
-    console.log("Starting Supabase DB Benchmark test");
+// MMO Client class
+class MMOClient {
+    private supabase: SupabaseTypes.SupabaseClient;
+    private clientId: number;
+    private worldId: string;
+    private subscribedNodes: string[];
+    private positions: Map<string, [number, number, number]>;
+    public latencies: number[] = [];
+
+    constructor(
+        supabase: SupabaseTypes.SupabaseClient,
+        clientId: number,
+        worldId: string,
+        allNodes: World.I_Node[],
+    ) {
+        this.supabase = supabase;
+        this.clientId = clientId;
+        this.worldId = worldId;
+        this.subscribedNodes = this.assignNodesToClient(allNodes);
+        this.positions = new Map();
+
+        // Initialize positions for subscribed nodes
+        this.subscribedNodes.forEach((nodeUuid) => {
+            this.positions.set(nodeUuid, [
+                Math.random() * 1000,
+                Math.random() * 1000,
+                Math.random() * 1000,
+            ]);
+        });
+    }
+
+    private assignNodesToClient(allNodes: World.I_Node[]): string[] {
+        return shuffleArray(allNodes.map((node) => node.vircadia_uuid))
+            .slice(0, NODES_PER_ZONE * ZONES_PER_CLIENT);
+    }
+
+    async update() {
+        const updates = [];
+        for (const [nodeUuid, position] of this.positions) {
+            // Simulate movement
+            const newPosition = position.map((coord) =>
+                coord + (Math.random() - 0.5) * 10
+            ) as [number, number, number];
+            this.positions.set(nodeUuid, newPosition);
+
+            updates.push({
+                vircadia_uuid: nodeUuid,
+                translation: newPosition,
+                extras: {
+                    vircadia: {
+                        updatedAt: new Date().toISOString(),
+                    },
+                },
+            });
+        }
+
+        const startTime = performance.now();
+        const { error } = await this.supabase
+            .from("nodes")
+            .upsert(updates);
+        const endTime = performance.now();
+
+        if (!error) {
+            this.latencies.push(endTime - startTime);
+        }
+    }
+}
+
+// Client runner function
+async function runClient(client: MMOClient, duration: number) {
+    const endTime = Date.now() + duration * 1000;
+    while (Date.now() < endTime) {
+        await client.update();
+        await new Promise((resolve) =>
+            setTimeout(resolve, 1000 / UPDATES_PER_SECOND)
+        );
+    }
+}
+
+// Main benchmark test
+Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
+    console.log("Starting Supabase MMO Realtime DB Benchmark test");
 
     // Initialize Supabase
     console.log("Initializing Supabase...");
@@ -51,26 +152,19 @@ Deno.test("Supabase DB Benchmark", async () => {
     console.log("Supabase client created");
 
     // Sign in with the test user
-    const testUserPassword = Deno.env.get("TEST_USER_PASSWORD");
-    if (!testUserPassword) {
-        console.error(
-            "TEST_USER_PASSWORD environment variable is not set.",
-        );
-        return;
-    }
     const testUserEmail = Deno.env.get("TEST_USER_EMAIL");
-    if (!testUserEmail) {
+    const testUserPassword = Deno.env.get("TEST_USER_PASSWORD");
+    if (!testUserEmail || !testUserPassword) {
         console.error(
-            "TEST_USER_EMAIL environment variable is not set.",
+            "TEST_USER_EMAIL or TEST_USER_PASSWORD environment variable is not set.",
         );
         return;
     }
 
-    const { data: authData, error: authError } = await client.auth
-        .signInWithPassword({
-            email: testUserEmail,
-            password: testUserPassword,
-        });
+    const { error: authError } = await client.auth.signInWithPassword({
+        email: testUserEmail,
+        password: testUserPassword,
+    });
 
     if (authError) {
         console.error("Error signing in:", authError);
@@ -82,66 +176,111 @@ Deno.test("Supabase DB Benchmark", async () => {
     let channel: SupabaseTypes.RealtimeChannel | null = null;
 
     try {
-        // Seed the database
-        console.log(`Seeding ${SEED_COUNT} world_gltf entries...`);
-        const seedStart = performance.now();
-        const seedData = Array.from(
-            { length: SEED_COUNT },
-            generateRandomWorldGLTF,
-        );
-        const { data: seededData, error: seedError } = await client
+        // Create a test world
+        const { data: worldData, error: worldError } = await client
             .from("world_gltf")
-            .insert(seedData)
-            .select();
-        if (seedError) {
-            throw new Error(`Error seeding data: ${seedError.message}`);
+            .insert({
+                name: `${TEST_PREFIX}Benchmark World`,
+                version: "1.0.0",
+                metadata: { description: "A world for benchmark testing" },
+                asset: { version: "2.0" },
+            })
+            .select()
+            .single();
+
+        if (worldError || !worldData) {
+            throw new Error(
+                `Error creating test world: ${worldError?.message}`,
+            );
         }
-        const seedEnd = performance.now();
-        console.log(`Seeding completed in ${seedEnd - seedStart}ms`);
+
+        const worldId = worldData.vircadia_uuid;
+
+        // Create nodes for all zones
+        console.log(`Creating ${TOTAL_NODES} nodes...`);
+        const nodes: World.I_Node[] = [];
+        for (let nodeIndex = 0; nodeIndex < TOTAL_NODES; nodeIndex++) {
+            nodes.push(generateRandomNode(worldId, nodeIndex));
+        }
+        const { error: nodesError } = await client.from("nodes").insert(nodes);
+        if (nodesError) {
+            throw new Error(`Error creating nodes: ${nodesError.message}`);
+        }
 
         // Set up real-time subscription
         console.log("Setting up real-time subscription...");
         channel = client
-            .channel("world_gltf_changes")
+            .channel("nodes_changes")
             .on("postgres_changes", {
                 event: "UPDATE",
                 schema: "public",
-                table: "world_gltf",
+                table: "nodes",
             }, (payload) => {
-                console.log("Change received:", payload);
+                // We're not processing the updates, just measuring broadcast performance
             })
             .subscribe();
 
-        // Perform updates and measure time
-        console.log(`Performing ${UPDATE_COUNT} updates...`);
-        const updateStart = performance.now();
-        let updateCount = 0;
-        for (let i = 0; i < UPDATE_COUNT; i++) {
-            const randomIndex = Math.floor(Math.random() * seededData.length);
-            const worldToUpdate = seededData[randomIndex];
-            const { data, error } = await client
-                .from("world_gltf")
-                .update({ name: `${TEST_PREFIX}Updated World ${i}` })
-                .eq("vircadia_uuid", worldToUpdate.vircadia_uuid);
-            if (!error) updateCount++;
+        // Create and run clients
+        console.log(
+            `Running ${NUM_CLIENTS} clients for ${BENCHMARK_DURATION} seconds...`,
+        );
+        const clients = Array.from(
+            { length: NUM_CLIENTS },
+            (_, i) => new MMOClient(client, i, worldId, nodes),
+        );
+        const clientPromises = clients.map((client) =>
+            runClient(client, BENCHMARK_DURATION)
+        );
+
+        // Wait for all clients to finish
+        await Promise.all(clientPromises);
+
+        // Collect and analyze results
+        const allLatencies = clients.flatMap((client) => client.latencies);
+        const totalUpdates = allLatencies.length;
+        const minLatency = Math.min(...allLatencies);
+        const maxLatency = Math.max(...allLatencies);
+        const avgLatency = allLatencies.reduce((sum, lat) => sum + lat, 0) /
+            totalUpdates;
+        const medianLatency = allLatencies.sort((a, b) =>
+            a - b
+        )[Math.floor(totalUpdates / 2)];
+
+        // Print results
+        console.log("Supabase MMO Realtime DB Benchmark Results:");
+        console.log(`Number of clients: ${NUM_CLIENTS}`);
+        console.log(`Number of zones: ${NUM_ZONES}`);
+        console.log(`Nodes per zone: ${NODES_PER_ZONE}`);
+        console.log(`Zones per client: ${ZONES_PER_CLIENT}`);
+        console.log(`Total nodes: ${TOTAL_NODES}`);
+        console.log(`Updates per second per client: ${UPDATES_PER_SECOND}`);
+        console.log(`Benchmark duration: ${BENCHMARK_DURATION} seconds`);
+        console.log(`Total updates: ${totalUpdates}`);
+        console.log(`Min latency: ${minLatency.toFixed(6)} ms`);
+        console.log(`Max latency: ${maxLatency.toFixed(6)} ms`);
+        console.log(`Average latency: ${avgLatency.toFixed(6)} ms`);
+        console.log(`Median latency: ${medianLatency.toFixed(6)} ms`);
+
+        // Calculate percentiles
+        const percentiles = [50, 75, 90, 95, 99];
+        for (const p of percentiles) {
+            const index = Math.floor(totalUpdates * p / 100);
+            console.log(
+                `${p}th percentile latency: ${
+                    allLatencies[index].toFixed(6)
+                } ms`,
+            );
         }
-        const updateEnd = performance.now();
-        console.log(`Updates completed in ${updateEnd - updateStart}ms`);
-        console.log(`Successfully updated ${updateCount} entries`);
     } catch (error) {
         console.error("Test failed:", error.message);
     } finally {
         // Clean up
-        console.log("Cleaning up seeded data...");
-        const { error: cleanupError } = await client
-            .from("world_gltf")
-            .delete()
-            .like("name", `${TEST_PREFIX}%`);
-        if (cleanupError) {
-            console.error(`Error cleaning up data: ${cleanupError.message}`);
-        } else {
-            console.log("Cleanup completed");
-        }
+        console.log("Cleaning up test data...");
+        await client.from("nodes").delete().like("name", `${TEST_PREFIX}%`);
+        await client.from("world_gltf").delete().like(
+            "name",
+            `${TEST_PREFIX}%`,
+        );
 
         // Cleanup resources
         if (channel) {
@@ -153,5 +292,5 @@ Deno.test("Supabase DB Benchmark", async () => {
         console.log("Signed out and cleaned up resources");
     }
 
-    console.log("Supabase DB Benchmark test completed");
+    console.log("Supabase MMO Realtime DB Benchmark test completed");
 });
