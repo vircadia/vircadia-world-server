@@ -1,7 +1,8 @@
 -- This migration conforms to the glTF 2.0 specification and uses custom features within extras.
 -- If for some reason it falls out alignment with the ability to serialize without much conversion to glTF 2.0, then please update the migration to conform again.
--- Any fields prefixed with "vircadia_" are custom and not compliant with glTF 2.0, and may need to be removed when serializing to glTF 2.0 for unsupported editors.
+-- Any fields prefixed with "vircadia_" are custom and not compliant with glTF 2.0, and need to be moved to and from "extras" as needed.
 
+-- NOTE: ALL EXTENSIONS MUST BE ACTIVATED HERE.
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Enable pg_jsonschema extension for JSON schema validation
@@ -9,32 +10,47 @@ CREATE EXTENSION IF NOT EXISTS pg_jsonschema WITH SCHEMA extensions;
 
 --
 --
--- USERS
+-- AGENTS
 --
 --
 
--- Create the user_profiles table
-CREATE TABLE public.user_profiles (
+CREATE TYPE agent_role AS ENUM ('guest', 'member', 'admin');
+
+-- Create the agent_profiles table
+CREATE TABLE public.agent_profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     username TEXT UNIQUE,
-    full_name TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    role agent_role NOT NULL DEFAULT 'guest',
+    createdat TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updatedat TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Create a trigger to automatically create a profile entry when a new user signs up
-CREATE OR REPLACE FUNCTION public.handle_new_user()
+-- Create a trigger to automatically update the updatedat column
+CREATE OR REPLACE FUNCTION update_agent_profiles_modified_column()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.user_profiles (id, username, full_name, role)
-  VALUES (new.id, new.raw_user_meta_data->>'username', new.raw_user_meta_data->>'full_name', 'guest');
+    NEW.updatedat = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_agent_profiles_modtime
+BEFORE UPDATE ON agent_profiles
+FOR EACH ROW EXECUTE FUNCTION update_agent_profiles_modified_column();
+
+-- Create a trigger to automatically create a profile entry when a new user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_agent()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.agent_profiles (id, username, role)
+  VALUES (new.id, new.raw_user_meta_data->>'username', 'guest');
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_agent();
 
 --
 --
@@ -45,6 +61,7 @@ CREATE TRIGGER on_auth_user_created
 -- Create the world_gltf table
 CREATE TABLE world_gltf (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
+
     name TEXT NOT NULL,
     version TEXT NOT NULL,
     metadata JSONB NOT NULL,
@@ -53,7 +70,13 @@ CREATE TABLE world_gltf (
     extensionsRequired TEXT[],
     extensions JSONB,
     extras JSONB,
-    asset JSONB NOT NULL
+    asset JSONB NOT NULL,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW()
 );
 
 --
@@ -66,10 +89,30 @@ CREATE TABLE world_gltf (
 CREATE TABLE scenes (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     nodes JSONB,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_scene_clearColor JSONB,
+    vircadia_babylonjs_scene_ambientColor JSONB,
+    vircadia_babylonjs_scene_gravity JSONB,
+    vircadia_babylonjs_scene_activeCamera TEXT,
+    vircadia_babylonjs_scene_collisionsEnabled BOOLEAN,
+    vircadia_babylonjs_scene_physicsEnabled BOOLEAN,
+    vircadia_babylonjs_scene_physicsGravity JSONB,
+    vircadia_babylonjs_scene_physicsEngine TEXT,
+    vircadia_babylonjs_scene_autoAnimate BOOLEAN,
+    vircadia_babylonjs_scene_autoAnimateFrom NUMERIC,
+    vircadia_babylonjs_scene_autoAnimateTo NUMERIC,
+    vircadia_babylonjs_scene_autoAnimateLoop BOOLEAN,
+    vircadia_babylonjs_scene_autoAnimateSpeed NUMERIC
 );
 
 --
@@ -82,6 +125,7 @@ CREATE TABLE scenes (
 CREATE TABLE nodes (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     camera TEXT,
     children JSONB,
@@ -93,7 +137,27 @@ CREATE TABLE nodes (
     translation NUMERIC[3] DEFAULT ARRAY[0,0,0],
     weights JSONB,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -106,11 +170,32 @@ CREATE TABLE nodes (
 CREATE TABLE meshes (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     primitives JSONB NOT NULL,
     weights JSONB,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -123,6 +208,7 @@ CREATE TABLE meshes (
 CREATE TABLE materials (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     pbrMetallicRoughness JSONB,
     normalTexture JSONB,
@@ -148,7 +234,27 @@ CREATE TABLE materials (
             (pbrMetallicRoughness->>'metallicRoughnessTexture' IS NULL OR
              jsonb_typeof(pbrMetallicRoughness->'metallicRoughnessTexture') = 'object')
         )
-    )
+    ),
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -161,11 +267,32 @@ CREATE TABLE materials (
 CREATE TABLE textures (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     sampler TEXT,
     source TEXT,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -178,12 +305,33 @@ CREATE TABLE textures (
 CREATE TABLE images (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     uri TEXT,
     mimeType TEXT,
     bufferView TEXT,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -196,13 +344,34 @@ CREATE TABLE images (
 CREATE TABLE samplers (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     magFilter TEXT,
     minFilter TEXT,
     wrapS TEXT,
     wrapT TEXT,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -215,11 +384,32 @@ CREATE TABLE samplers (
 CREATE TABLE buffers (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     uri TEXT,
     byteLength INTEGER NOT NULL,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -232,6 +422,7 @@ CREATE TABLE buffers (
 CREATE TABLE buffer_views (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     buffer TEXT NOT NULL,
     byteOffset INTEGER DEFAULT 0,
     byteLength INTEGER NOT NULL,
@@ -239,7 +430,27 @@ CREATE TABLE buffer_views (
     target TEXT,
     name TEXT,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -252,6 +463,7 @@ CREATE TABLE buffer_views (
 CREATE TABLE accessors (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     bufferView TEXT,
     byteOffset INTEGER DEFAULT 0,
     componentType INTEGER NOT NULL,
@@ -263,7 +475,27 @@ CREATE TABLE accessors (
     name TEXT,
     sparse JSONB,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -276,11 +508,32 @@ CREATE TABLE accessors (
 CREATE TABLE animations (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     channels JSONB NOT NULL,
     samplers JSONB NOT NULL,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -293,13 +546,34 @@ CREATE TABLE animations (
 CREATE TABLE cameras (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     type TEXT NOT NULL,
     orthographic JSONB,
     perspective JSONB,
     extensions JSONB,
     extras JSONB,
-    CONSTRAINT check_camera_type CHECK (type IN ('perspective', 'orthographic'))
+    CONSTRAINT check_camera_type CHECK (type IN ('perspective', 'orthographic')),
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -312,12 +586,33 @@ CREATE TABLE cameras (
 CREATE TABLE skins (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
     name TEXT,
     inverseBindMatrices TEXT,
     skeleton TEXT,
     joints JSONB NOT NULL,
     extensions JSONB,
-    extras JSONB
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
 );
 
 --
@@ -326,20 +621,16 @@ CREATE TABLE skins (
 --
 --
 
--- Create a trigger function to update the updated_at column
+-- Create a trigger function to update the vircadia_updatedat column
 CREATE OR REPLACE FUNCTION update_modified_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = now();
+    NEW.vircadia_updatedat = now();
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Apply the trigger to all tables with updated_at column
-CREATE TRIGGER update_user_profiles_modtime
-BEFORE UPDATE ON user_profiles
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
-
+-- Apply the trigger to all tables with vircadia_updatedat column
 CREATE TRIGGER update_world_gltf_modtime
 BEFORE UPDATE ON world_gltf
 FOR EACH ROW EXECUTE FUNCTION update_modified_column();
@@ -397,7 +688,7 @@ BEFORE UPDATE ON skins
 FOR EACH ROW EXECUTE FUNCTION update_modified_column();
 
 -- Enable RLS for all tables
-ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE agent_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE world_gltf ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scenes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE nodes ENABLE ROW LEVEL SECURITY;

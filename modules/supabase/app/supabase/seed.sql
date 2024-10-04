@@ -47,7 +47,7 @@ BEGIN
     ) RETURNING id INTO admin_uuid;
 
     -- Update the user_profiles table to set the admin role
-    UPDATE public.user_profiles
+    UPDATE public.agent_profiles
     SET role = 'admin'
     WHERE id = admin_uuid;
 

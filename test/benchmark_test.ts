@@ -4,18 +4,16 @@ import { Supabase } from "../modules/supabase/supabase_manager.ts";
 import { World } from "../modules/vircadia-world-meta/typescript/meta.ts";
 
 // Constants
-const NUM_CLIENTS = 20;
+const NUM_CLIENTS = 10;
 const NUM_ZONES = 10;
-const NODES_PER_ZONE = 10;
-const ZONES_PER_CLIENT = 5;
-const UPDATES_PER_SECOND = 30;
+const NODES_PER_ZONE = 100;
+const ZONES_PER_CLIENT = 2;
+const UPDATES_PER_SECOND = 15;
 const TEST_PREFIX = "INTERNAL_TEST_";
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // milliseconds
 const CLIENT_UPDATE_JITTER = 100; // milliseconds
-
-// New constant for total updates per client
-const UPDATES_PER_CLIENT = 5000;
+const UPDATES_PER_CLIENT = 500;
 
 // Calculate total number of nodes
 const TOTAL_NODES = NUM_ZONES * NODES_PER_ZONE;
@@ -44,15 +42,10 @@ function generateRandomNode(
             Math.random() * 1000,
             Math.random() * 1000,
         ],
-        extras: {
-            vircadia: {
-                name: `Node ${nodeIndex}`,
-                version: "1.0.0",
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                babylonjs: {},
-            },
-        },
+        vircadia_version: "1.0.0",
+        vircadia_createdat: new Date().toISOString(),
+        vircadia_updatedat: new Date().toISOString(),
+        extras: {},
     };
 }
 
@@ -107,11 +100,7 @@ class MMOClient {
                 vircadia_uuid: nodeUuid,
                 vircadia_world_uuid: this.worldId,
                 translation: newPosition,
-                extras: {
-                    vircadia: {
-                        updatedAt: new Date().toISOString(),
-                    },
-                },
+                vircadia_updatedat: new Date().toISOString(),
             });
         }
 
@@ -209,14 +198,19 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
 
     try {
         // Create a test world
+        const testWorldData: Partial<World.I_WorldGLTF> = {
+            name: `${TEST_PREFIX}Benchmark World`,
+            version: "1.0.0",
+            metadata: { description: "A world for benchmark testing" },
+            asset: { version: "2.0" },
+            vircadia_version: "1.0.0",
+            vircadia_createdat: new Date().toISOString(),
+            vircadia_updatedat: new Date().toISOString(),
+        };
+
         const { data: worldData, error: worldError } = await client
             .from("world_gltf")
-            .insert({
-                name: `${TEST_PREFIX}Benchmark World`,
-                version: "1.0.0",
-                metadata: { description: "A world for benchmark testing" },
-                asset: { version: "2.0" },
-            })
+            .insert(testWorldData)
             .select()
             .single();
 
@@ -294,22 +288,30 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
 
         // Print results
         console.log("Supabase MMO Realtime DB Benchmark Results:");
-        console.log(`Number of clients: ${NUM_CLIENTS}`);
-        console.log(`Number of zones: ${NUM_ZONES}`);
-        console.log(`Nodes per zone: ${NODES_PER_ZONE}`);
-        console.log(`Zones per client: ${ZONES_PER_CLIENT}`);
-        console.log(`Total nodes: ${TOTAL_NODES}`);
-        console.log(`Updates per client: ${UPDATES_PER_CLIENT}`);
-        console.log(`Total updates: ${totalUpdates}`);
-        console.log(`Total duration: ${totalDuration.toFixed(2)} seconds`);
-        console.log(`Updates per second: ${updatesPerSecond.toFixed(2)}`);
-        console.log(`Max retries: ${MAX_RETRIES}`);
-        console.log(`Retry delay: ${RETRY_DELAY} ms`);
+
+        console.log("\nConfiguration:");
+        console.log("------------------------------");
+        console.log(`Number of clients:    ${NUM_CLIENTS}`);
+        console.log(`Number of zones:      ${NUM_ZONES}`);
+        console.log(`Nodes per zone:       ${NODES_PER_ZONE}`);
+        console.log(`Zones per client:     ${ZONES_PER_CLIENT}`);
+        console.log(`Total nodes:          ${TOTAL_NODES}`);
+        console.log(`Updates per client:   ${UPDATES_PER_CLIENT}`);
+        console.log(`Max retries:          ${MAX_RETRIES}`);
+        console.log(`Retry delay:          ${RETRY_DELAY} ms`);
         console.log(`Client update jitter: 0-${CLIENT_UPDATE_JITTER} ms`);
-        console.log(`Min latency: ${minLatency.toFixed(6)} ms`);
-        console.log(`Max latency: ${maxLatency.toFixed(6)} ms`);
-        console.log(`Average latency: ${avgLatency.toFixed(6)} ms`);
-        console.log(`Median latency: ${medianLatency.toFixed(6)} ms`);
+
+        console.log("\nBenchmark Results:");
+        console.log("------------------------------");
+        console.log(`Total updates:        ${totalUpdates}`);
+        console.log(
+            `Total duration:       ${totalDuration.toFixed(2)} seconds`,
+        );
+        console.log(`Updates per second:   ${updatesPerSecond.toFixed(2)}`);
+        console.log(`Min latency:          ${minLatency.toFixed(6)} ms`);
+        console.log(`Max latency:          ${maxLatency.toFixed(6)} ms`);
+        console.log(`Average latency:      ${avgLatency.toFixed(6)} ms`);
+        console.log(`Median latency:       ${medianLatency.toFixed(6)} ms`);
 
         // Calculate percentiles
         const percentiles = [50, 75, 90, 95, 99];
