@@ -4,16 +4,14 @@ import { Supabase } from "../modules/supabase/supabase_manager.ts";
 import { World } from "../modules/vircadia-world-meta/typescript/meta.ts";
 
 // Constants
-const NUM_CLIENTS = 10;
-const NUM_ZONES = 10;
-const NODES_PER_ZONE = 100;
+const NUM_CLIENTS = 50;
+const NUM_ZONES = 5;
+const NODES_PER_ZONE = 50;
 const ZONES_PER_CLIENT = 2;
-const UPDATES_PER_SECOND = 15;
 const TEST_PREFIX = "INTERNAL_TEST_";
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // milliseconds
-const CLIENT_UPDATE_JITTER = 100; // milliseconds
-const UPDATES_PER_CLIENT = 500;
+const UPDATES_PER_CLIENT = 100;
 
 // Calculate total number of nodes
 const TOTAL_NODES = NUM_ZONES * NODES_PER_ZONE;
@@ -28,10 +26,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 // Node generation
-function generateRandomNode(
-    worldId: string,
-    nodeIndex: number,
-): World.I_Node {
+function generateRandomNode(worldId: string, nodeIndex: number): World.I_Node {
     const nodeUuid = crypto.randomUUID();
     return {
         vircadia_uuid: nodeUuid,
@@ -42,6 +37,12 @@ function generateRandomNode(
             Math.random() * 1000,
             Math.random() * 1000,
         ],
+        rotation: [
+            Math.random() * 360,
+            Math.random() * 360,
+            Math.random() * 360,
+        ],
+        scale: [1, 1, 1],
         vircadia_version: "1.0.0",
         vircadia_createdat: new Date().toISOString(),
         vircadia_updatedat: new Date().toISOString(),
@@ -83,33 +84,49 @@ class MMOClient {
     }
 
     private assignNodesToClient(allNodes: World.I_Node[]): string[] {
-        return shuffleArray(allNodes.map((node) => node.vircadia_uuid))
-            .slice(0, NODES_PER_ZONE * ZONES_PER_CLIENT);
+        const startIndex = this.clientId * NODES_PER_ZONE * ZONES_PER_CLIENT;
+        return allNodes.slice(
+            startIndex,
+            startIndex + NODES_PER_ZONE * ZONES_PER_CLIENT,
+        )
+            .map((node) => node.vircadia_uuid);
+    }
+
+    private updateNode(nodeUuid: string): Partial<World.I_Node> {
+        const currentPosition = this.positions.get(nodeUuid)!;
+        const newPosition = currentPosition.map((coord) =>
+            coord + (Math.random() - 0.5) * 2
+        ) as [number, number, number];
+        this.positions.set(nodeUuid, newPosition);
+
+        return {
+            vircadia_uuid: nodeUuid,
+            vircadia_world_uuid: this.worldId,
+            translation: newPosition,
+            rotation: [
+                Math.random() * 360,
+                Math.random() * 360,
+                Math.random() * 360,
+            ],
+            scale: [
+                1 + Math.random() * 0.1,
+                1 + Math.random() * 0.1,
+                1 + Math.random() * 0.1,
+            ],
+            vircadia_updatedat: new Date().toISOString(),
+        };
     }
 
     async update() {
-        const updates: Partial<World.I_Node>[] = [];
-        for (const [nodeUuid, position] of this.positions) {
-            // Simulate movement
-            const newPosition = position.map((coord) =>
-                coord + (Math.random() - 0.5) * 10
-            ) as [number, number, number];
-            this.positions.set(nodeUuid, newPosition);
-
-            updates.push({
-                vircadia_uuid: nodeUuid,
-                vircadia_world_uuid: this.worldId,
-                translation: newPosition,
-                vircadia_updatedat: new Date().toISOString(),
-            });
-        }
+        const updates = this.subscribedNodes.map((nodeUuid) =>
+            this.updateNode(nodeUuid)
+        );
 
         const startTime = performance.now();
         let error;
         for (let attempt = 0; attempt < this.maxRetries; attempt++) {
             try {
-                const { error: updateError } = await this.supabase
-                    .from("nodes")
+                const { error: updateError } = await this.supabase.from("nodes")
                     .upsert(updates);
                 if (!updateError) {
                     error = null;
@@ -121,7 +138,7 @@ class MMOClient {
             }
             if (attempt < this.maxRetries - 1) {
                 await new Promise((resolve) =>
-                    setTimeout(resolve, this.retryDelay)
+                    setTimeout(resolve, this.retryDelay * Math.pow(2, attempt))
                 );
             }
         }
@@ -140,13 +157,6 @@ class MMOClient {
 async function runClient(client: MMOClient, totalUpdates: number) {
     for (let i = 0; i < totalUpdates; i++) {
         await client.update();
-        await new Promise((resolve) =>
-            setTimeout(
-                resolve,
-                1000 / UPDATES_PER_SECOND +
-                    Math.random() * CLIENT_UPDATE_JITTER,
-            )
-        );
     }
 }
 
@@ -155,24 +165,25 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
     console.log("Starting Supabase MMO Realtime DB Benchmark test");
 
     // Initialize Supabase
-    console.log("Initializing Supabase...");
+    console.log("Step 1: Initializing Supabase...");
     const supabase = Supabase.getInstance(true); // Enable debug mode
     await supabase.initializeAndStart({ forceRestart: false });
-    console.log("Supabase initialized");
+    console.log("Supabase initialized successfully");
 
     // Get Supabase status
-    console.log("Getting Supabase status...");
+    console.log("\nStep 2: Getting Supabase status...");
     const status = await supabase.getStatus();
     console.log("Supabase status:", status);
 
     // Create Supabase client
-    console.log("Creating Supabase client...");
+    console.log("\nStep 3: Creating Supabase client...");
     const supabaseUrl = `http://${status.api.host}:${status.api.port}`;
     const supabaseKey = status.anonKey || "";
     const client = createClient(supabaseUrl, supabaseKey);
-    console.log("Supabase client created");
+    console.log("Supabase client created successfully");
 
     // Sign in with the test user
+    console.log("\nStep 4: Signing in with test user...");
     const testUserEmail = Deno.env.get("TEST_USER_EMAIL");
     const testUserPassword = Deno.env.get("TEST_USER_PASSWORD");
     if (!testUserEmail || !testUserPassword) {
@@ -191,13 +202,13 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
         console.error("Error signing in:", authError);
         return;
     }
-
-    console.log("Signed in as test user");
+    console.log("Signed in as test user successfully");
 
     let channel: SupabaseTypes.RealtimeChannel | null = null;
 
     try {
         // Create a test world
+        console.log("\nStep 5: Creating test world...");
         const testWorldData: Partial<World.I_WorldGLTF> = {
             name: `${TEST_PREFIX}Benchmark World`,
             version: "1.0.0",
@@ -219,11 +230,12 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
                 `Error creating test world: ${worldError?.message}`,
             );
         }
+        console.log("Test world created successfully");
 
         const worldId = worldData.vircadia_uuid;
 
         // Create nodes for all zones
-        console.log(`Creating ${TOTAL_NODES} nodes...`);
+        console.log(`\nStep 6: Creating ${TOTAL_NODES} nodes...`);
         const nodes: World.I_Node[] = [];
         for (let nodeIndex = 0; nodeIndex < TOTAL_NODES; nodeIndex++) {
             nodes.push(generateRandomNode(worldId, nodeIndex));
@@ -232,9 +244,10 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
         if (nodesError) {
             throw new Error(`Error creating nodes: ${nodesError.message}`);
         }
+        console.log(`${TOTAL_NODES} nodes created successfully`);
 
         // Set up real-time subscription
-        console.log("Setting up real-time subscription...");
+        console.log("\nStep 7: Setting up real-time subscription...");
         channel = client
             .channel("nodes_changes")
             .on("postgres_changes", {
@@ -245,10 +258,11 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
                 // We're not processing the updates, just measuring broadcast performance
             })
             .subscribe();
+        console.log("Real-time subscription set up successfully");
 
         // Create and run clients
         console.log(
-            `Running ${NUM_CLIENTS} clients for ${UPDATES_PER_CLIENT} updates per client at ${UPDATES_PER_SECOND} updates per second...`,
+            `\nStep 8: Running ${NUM_CLIENTS} clients concurrently for ${UPDATES_PER_CLIENT} updates per client...`,
         );
         const clients = Array.from(
             { length: NUM_CLIENTS },
@@ -256,19 +270,18 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
         );
 
         const startTime = performance.now();
-        const clientPromises = clients.map((client) =>
-            runClient(client, UPDATES_PER_CLIENT)
+        await Promise.all(
+            clients.map((client) => runClient(client, UPDATES_PER_CLIENT)),
         );
-
-        // Wait for all clients to finish
-        await Promise.all(clientPromises);
         const endTime = performance.now();
+        console.log("All clients finished running");
 
+        // Collect and analyze results
+        console.log("\nStep 9: Collecting and analyzing results...");
         const totalDuration = (endTime - startTime) / 1000; // in seconds
         const totalUpdates = NUM_CLIENTS * UPDATES_PER_CLIENT;
         const updatesPerSecond = totalUpdates / totalDuration;
 
-        // Collect and analyze results
         const allLatencies = clients.flatMap((client) => client.latencies);
 
         if (totalUpdates === 0) {
@@ -286,8 +299,18 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
             a - b
         )[Math.floor(totalUpdates / 2)];
 
+        // Calculate standard deviation
+        const latencyVariance = allLatencies.reduce((sum, lat) =>
+            sum + Math.pow(lat - avgLatency, 2), 0) / totalUpdates;
+        const latencyStdDev = Math.sqrt(latencyVariance);
+
+        // Calculate total operations
+        const totalOperations = NUM_CLIENTS * UPDATES_PER_CLIENT *
+            NODES_PER_ZONE * ZONES_PER_CLIENT;
+        const operationsPerSecond = totalOperations / totalDuration;
+
         // Print results
-        console.log("Supabase MMO Realtime DB Benchmark Results:");
+        console.log("\nSupabase MMO Realtime DB Benchmark Results:");
 
         console.log("\nConfiguration:");
         console.log("------------------------------");
@@ -299,19 +322,21 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
         console.log(`Updates per client:   ${UPDATES_PER_CLIENT}`);
         console.log(`Max retries:          ${MAX_RETRIES}`);
         console.log(`Retry delay:          ${RETRY_DELAY} ms`);
-        console.log(`Client update jitter: 0-${CLIENT_UPDATE_JITTER} ms`);
 
         console.log("\nBenchmark Results:");
         console.log("------------------------------");
         console.log(`Total updates:        ${totalUpdates}`);
+        console.log(`Total operations:     ${totalOperations}`);
         console.log(
             `Total duration:       ${totalDuration.toFixed(2)} seconds`,
         );
         console.log(`Updates per second:   ${updatesPerSecond.toFixed(2)}`);
+        console.log(`Operations per second: ${operationsPerSecond.toFixed(2)}`);
         console.log(`Min latency:          ${minLatency.toFixed(6)} ms`);
         console.log(`Max latency:          ${maxLatency.toFixed(6)} ms`);
         console.log(`Average latency:      ${avgLatency.toFixed(6)} ms`);
         console.log(`Median latency:       ${medianLatency.toFixed(6)} ms`);
+        console.log(`Latency Std Dev:      ${latencyStdDev.toFixed(6)} ms`);
 
         // Calculate percentiles
         const percentiles = [50, 75, 90, 95, 99];
@@ -331,14 +356,16 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
         console.error("Test failed:", error.message);
     } finally {
         // Clean up
-        console.log("Cleaning up test data...");
+        console.log("\nStep 10: Cleaning up test data...");
         await client.from("nodes").delete().like("name", `${TEST_PREFIX}%`);
         await client.from("world_gltf").delete().like(
             "name",
             `${TEST_PREFIX}%`,
         );
+        console.log("Test data cleaned up successfully");
 
         // Cleanup resources
+        console.log("\nStep 11: Cleaning up resources...");
         if (channel) {
             await channel.unsubscribe();
         }
@@ -348,5 +375,5 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
         console.log("Signed out and cleaned up resources");
     }
 
-    console.log("Supabase MMO Realtime DB Benchmark test completed");
+    console.log("\nSupabase MMO Realtime DB Benchmark test completed");
 });
