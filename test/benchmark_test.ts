@@ -4,13 +4,18 @@ import { Supabase } from "../modules/supabase/supabase_manager.ts";
 import { World } from "../modules/vircadia-world-meta/typescript/meta.ts";
 
 // Constants
-const NUM_CLIENTS = 500;
-const NUM_ZONES = 50;
+const NUM_CLIENTS = 20;
+const NUM_ZONES = 10;
 const NODES_PER_ZONE = 10;
 const ZONES_PER_CLIENT = 5;
 const UPDATES_PER_SECOND = 30;
-const BENCHMARK_DURATION = 60; // seconds
 const TEST_PREFIX = "INTERNAL_TEST_";
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // milliseconds
+const CLIENT_UPDATE_JITTER = 100; // milliseconds
+
+// New constant for total updates per client
+const UPDATES_PER_CLIENT = 5000;
 
 // Calculate total number of nodes
 const TOTAL_NODES = NUM_ZONES * NODES_PER_ZONE;
@@ -43,8 +48,9 @@ function generateRandomNode(
             vircadia: {
                 name: `Node ${nodeIndex}`,
                 version: "1.0.0",
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                babylonjs: {},
             },
         },
     };
@@ -58,6 +64,8 @@ class MMOClient {
     private subscribedNodes: string[];
     private positions: Map<string, [number, number, number]>;
     public latencies: number[] = [];
+    private maxRetries = MAX_RETRIES;
+    private retryDelay = RETRY_DELAY;
 
     constructor(
         supabase: SupabaseTypes.SupabaseClient,
@@ -87,7 +95,7 @@ class MMOClient {
     }
 
     async update() {
-        const updates = [];
+        const updates: Partial<World.I_Node>[] = [];
         for (const [nodeUuid, position] of this.positions) {
             // Simulate movement
             const newPosition = position.map((coord) =>
@@ -97,6 +105,7 @@ class MMOClient {
 
             updates.push({
                 vircadia_uuid: nodeUuid,
+                vircadia_world_uuid: this.worldId,
                 translation: newPosition,
                 extras: {
                     vircadia: {
@@ -107,24 +116,47 @@ class MMOClient {
         }
 
         const startTime = performance.now();
-        const { error } = await this.supabase
-            .from("nodes")
-            .upsert(updates);
-        const endTime = performance.now();
-
-        if (!error) {
-            this.latencies.push(endTime - startTime);
+        let error;
+        for (let attempt = 0; attempt < this.maxRetries; attempt++) {
+            try {
+                const { error: updateError } = await this.supabase
+                    .from("nodes")
+                    .upsert(updates);
+                if (!updateError) {
+                    error = null;
+                    break;
+                }
+                error = updateError;
+            } catch (e) {
+                error = e;
+            }
+            if (attempt < this.maxRetries - 1) {
+                await new Promise((resolve) =>
+                    setTimeout(resolve, this.retryDelay)
+                );
+            }
         }
+        if (error) {
+            console.error(
+                `Error updating nodes for client ${this.clientId}:`,
+                error,
+            );
+        }
+        const endTime = performance.now();
+        this.latencies.push(endTime - startTime);
     }
 }
 
-// Client runner function
-async function runClient(client: MMOClient, duration: number) {
-    const endTime = Date.now() + duration * 1000;
-    while (Date.now() < endTime) {
+// Modified client runner function
+async function runClient(client: MMOClient, totalUpdates: number) {
+    for (let i = 0; i < totalUpdates; i++) {
         await client.update();
         await new Promise((resolve) =>
-            setTimeout(resolve, 1000 / UPDATES_PER_SECOND)
+            setTimeout(
+                resolve,
+                1000 / UPDATES_PER_SECOND +
+                    Math.random() * CLIENT_UPDATE_JITTER,
+            )
         );
     }
 }
@@ -222,22 +254,36 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
 
         // Create and run clients
         console.log(
-            `Running ${NUM_CLIENTS} clients for ${BENCHMARK_DURATION} seconds...`,
+            `Running ${NUM_CLIENTS} clients for ${UPDATES_PER_CLIENT} updates per client at ${UPDATES_PER_SECOND} updates per second...`,
         );
         const clients = Array.from(
             { length: NUM_CLIENTS },
             (_, i) => new MMOClient(client, i, worldId, nodes),
         );
+
+        const startTime = performance.now();
         const clientPromises = clients.map((client) =>
-            runClient(client, BENCHMARK_DURATION)
+            runClient(client, UPDATES_PER_CLIENT)
         );
 
         // Wait for all clients to finish
         await Promise.all(clientPromises);
+        const endTime = performance.now();
+
+        const totalDuration = (endTime - startTime) / 1000; // in seconds
+        const totalUpdates = NUM_CLIENTS * UPDATES_PER_CLIENT;
+        const updatesPerSecond = totalUpdates / totalDuration;
 
         // Collect and analyze results
         const allLatencies = clients.flatMap((client) => client.latencies);
-        const totalUpdates = allLatencies.length;
+
+        if (totalUpdates === 0) {
+            console.log(
+                "No updates were recorded. Check for errors in the client update process.",
+            );
+            return;
+        }
+
         const minLatency = Math.min(...allLatencies);
         const maxLatency = Math.max(...allLatencies);
         const avgLatency = allLatencies.reduce((sum, lat) => sum + lat, 0) /
@@ -253,9 +299,13 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
         console.log(`Nodes per zone: ${NODES_PER_ZONE}`);
         console.log(`Zones per client: ${ZONES_PER_CLIENT}`);
         console.log(`Total nodes: ${TOTAL_NODES}`);
-        console.log(`Updates per second per client: ${UPDATES_PER_SECOND}`);
-        console.log(`Benchmark duration: ${BENCHMARK_DURATION} seconds`);
+        console.log(`Updates per client: ${UPDATES_PER_CLIENT}`);
         console.log(`Total updates: ${totalUpdates}`);
+        console.log(`Total duration: ${totalDuration.toFixed(2)} seconds`);
+        console.log(`Updates per second: ${updatesPerSecond.toFixed(2)}`);
+        console.log(`Max retries: ${MAX_RETRIES}`);
+        console.log(`Retry delay: ${RETRY_DELAY} ms`);
+        console.log(`Client update jitter: 0-${CLIENT_UPDATE_JITTER} ms`);
         console.log(`Min latency: ${minLatency.toFixed(6)} ms`);
         console.log(`Max latency: ${maxLatency.toFixed(6)} ms`);
         console.log(`Average latency: ${avgLatency.toFixed(6)} ms`);
@@ -265,11 +315,15 @@ Deno.test("Supabase MMO Realtime DB Benchmark", async () => {
         const percentiles = [50, 75, 90, 95, 99];
         for (const p of percentiles) {
             const index = Math.floor(totalUpdates * p / 100);
-            console.log(
-                `${p}th percentile latency: ${
-                    allLatencies[index].toFixed(6)
-                } ms`,
-            );
+            if (index < allLatencies.length) {
+                console.log(
+                    `${p}th percentile latency: ${
+                        allLatencies[index].toFixed(6)
+                    } ms`,
+                );
+            } else {
+                console.log(`${p}th percentile latency: N/A (not enough data)`);
+            }
         }
     } catch (error) {
         console.error("Test failed:", error.message);

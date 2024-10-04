@@ -43,13 +43,15 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_user_profile(
-  p_username TEXT,
-  p_role user_role
+  p_username TEXT DEFAULT NULL,
+  p_role user_role DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
   UPDATE user_profiles
-  SET username = p_username, role = p_role
+  SET 
+    username = COALESCE(p_username, username),
+    role = COALESCE(p_role, role)
   WHERE id = auth.uid();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -97,15 +99,15 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_world_gltf(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_version TEXT,
-  p_metadata JSONB,
-  p_defaultScene TEXT,
-  p_extensionsUsed TEXT[],
-  p_extensionsRequired TEXT[],
-  p_extensions JSONB,
-  p_extras JSONB,
-  p_asset JSONB
+  p_name TEXT DEFAULT NULL,
+  p_version TEXT DEFAULT NULL,
+  p_metadata JSONB DEFAULT NULL,
+  p_defaultScene TEXT DEFAULT NULL,
+  p_extensionsUsed TEXT[] DEFAULT NULL,
+  p_extensionsRequired TEXT[] DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL,
+  p_asset JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -114,15 +116,16 @@ BEGIN
   END IF;
 
   UPDATE world_gltf
-  SET name = p_name,
-      version = p_version,
-      metadata = p_metadata,
-      defaultScene = p_defaultScene,
-      extensionsUsed = p_extensionsUsed,
-      extensionsRequired = p_extensionsRequired,
-      extensions = p_extensions,
-      extras = p_extras,
-      asset = p_asset
+  SET 
+    name = COALESCE(p_name, name),
+    version = COALESCE(p_version, version),
+    metadata = COALESCE(p_metadata, metadata),
+    defaultScene = COALESCE(p_defaultScene, defaultScene),
+    extensionsUsed = COALESCE(p_extensionsUsed, extensionsUsed),
+    extensionsRequired = COALESCE(p_extensionsRequired, extensionsRequired),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras),
+    asset = COALESCE(p_asset, asset)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -170,10 +173,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_scene(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_nodes JSONB,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_name TEXT DEFAULT NULL,
+  p_nodes JSONB DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -182,10 +185,11 @@ BEGIN
   END IF;
 
   UPDATE scenes
-  SET name = p_name,
-      nodes = p_nodes,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    name = COALESCE(p_name, name),
+    nodes = COALESCE(p_nodes, nodes),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -241,18 +245,18 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_node(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_camera TEXT,
-  p_children JSONB,
-  p_skin TEXT,
-  p_matrix NUMERIC[16],
-  p_mesh TEXT,
-  p_rotation NUMERIC[4],
-  p_scale NUMERIC[3],
-  p_translation NUMERIC[3],
-  p_weights JSONB,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_name TEXT DEFAULT NULL,
+  p_camera TEXT DEFAULT NULL,
+  p_children JSONB DEFAULT NULL,
+  p_skin TEXT DEFAULT NULL,
+  p_matrix NUMERIC[16] DEFAULT NULL,
+  p_mesh TEXT DEFAULT NULL,
+  p_rotation NUMERIC[4] DEFAULT NULL,
+  p_scale NUMERIC[3] DEFAULT NULL,
+  p_translation NUMERIC[3] DEFAULT NULL,
+  p_weights JSONB DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -261,18 +265,19 @@ BEGIN
   END IF;
 
   UPDATE nodes
-  SET name = p_name,
-      camera = p_camera,
-      children = p_children,
-      skin = p_skin,
-      matrix = p_matrix,
-      mesh = p_mesh,
-      rotation = p_rotation,
-      scale = p_scale,
-      translation = p_translation,
-      weights = p_weights,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    name = COALESCE(p_name, name),
+    camera = COALESCE(p_camera, camera),
+    children = COALESCE(p_children, children),
+    skin = COALESCE(p_skin, skin),
+    matrix = COALESCE(p_matrix, matrix),
+    mesh = COALESCE(p_mesh, mesh),
+    rotation = COALESCE(p_rotation, rotation),
+    scale = COALESCE(p_scale, scale),
+    translation = COALESCE(p_translation, translation),
+    weights = COALESCE(p_weights, weights),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -294,12 +299,7 @@ CREATE POLICY nodes_insert_policy ON nodes FOR INSERT WITH CHECK (is_admin());
 CREATE POLICY nodes_update_policy ON nodes FOR UPDATE USING (is_admin());
 CREATE POLICY nodes_delete_policy ON nodes FOR DELETE USING (is_admin());
 
--- Similar functions and policies should be created for the remaining tables:
--- meshes, materials, textures, images, samplers, buffers, buffer_views, and accessors.
--- The structure will be similar to the examples above, adjusting for the specific
--- columns of each table.
-
--- Example for meshes (repeat this pattern for other tables):
+-- Meshes
 
 CREATE OR REPLACE FUNCTION create_mesh(
   p_vircadia_world_uuid UUID,
@@ -326,11 +326,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_mesh(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_primitives JSONB,
-  p_weights JSONB,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_name TEXT DEFAULT NULL,
+  p_primitives JSONB DEFAULT NULL,
+  p_weights JSONB DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -339,11 +339,12 @@ BEGIN
   END IF;
 
   UPDATE meshes
-  SET name = p_name,
-      primitives = p_primitives,
-      weights = p_weights,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    name = COALESCE(p_name, name),
+    primitives = COALESCE(p_primitives, primitives),
+    weights = COALESCE(p_weights, weights),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -398,17 +399,17 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_material(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_pbrMetallicRoughness JSONB,
-  p_normalTexture JSONB,
-  p_occlusionTexture JSONB,
-  p_emissiveTexture JSONB,
-  p_emissiveFactor NUMERIC[3],
-  p_alphaMode TEXT,
-  p_alphaCutoff NUMERIC,
-  p_doubleSided BOOLEAN,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_name TEXT DEFAULT NULL,
+  p_pbrMetallicRoughness JSONB DEFAULT NULL,
+  p_normalTexture JSONB DEFAULT NULL,
+  p_occlusionTexture JSONB DEFAULT NULL,
+  p_emissiveTexture JSONB DEFAULT NULL,
+  p_emissiveFactor NUMERIC[3] DEFAULT NULL,
+  p_alphaMode TEXT DEFAULT NULL,
+  p_alphaCutoff NUMERIC DEFAULT NULL,
+  p_doubleSided BOOLEAN DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -417,17 +418,18 @@ BEGIN
   END IF;
 
   UPDATE materials
-  SET name = p_name,
-      pbrMetallicRoughness = p_pbrMetallicRoughness,
-      normalTexture = p_normalTexture,
-      occlusionTexture = p_occlusionTexture,
-      emissiveTexture = p_emissiveTexture,
-      emissiveFactor = p_emissiveFactor,
-      alphaMode = p_alphaMode,
-      alphaCutoff = p_alphaCutoff,
-      doubleSided = p_doubleSided,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    name = COALESCE(p_name, name),
+    pbrMetallicRoughness = COALESCE(p_pbrMetallicRoughness, pbrMetallicRoughness),
+    normalTexture = COALESCE(p_normalTexture, normalTexture),
+    occlusionTexture = COALESCE(p_occlusionTexture, occlusionTexture),
+    emissiveTexture = COALESCE(p_emissiveTexture, emissiveTexture),
+    emissiveFactor = COALESCE(p_emissiveFactor, emissiveFactor),
+    alphaMode = COALESCE(p_alphaMode, alphaMode),
+    alphaCutoff = COALESCE(p_alphaCutoff, alphaCutoff),
+    doubleSided = COALESCE(p_doubleSided, doubleSided),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -476,11 +478,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_texture(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_sampler TEXT,
-  p_source TEXT,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_name TEXT DEFAULT NULL,
+  p_sampler TEXT DEFAULT NULL,
+  p_source TEXT DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -489,11 +491,12 @@ BEGIN
   END IF;
 
   UPDATE textures
-  SET name = p_name,
-      sampler = p_sampler,
-      source = p_source,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    name = COALESCE(p_name, name),
+    sampler = COALESCE(p_sampler, sampler),
+    source = COALESCE(p_source, source),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -543,12 +546,12 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_image(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_uri TEXT,
-  p_mimeType TEXT,
-  p_bufferView TEXT,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_name TEXT DEFAULT NULL,
+  p_uri TEXT DEFAULT NULL,
+  p_mimeType TEXT DEFAULT NULL,
+  p_bufferView TEXT DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -557,12 +560,13 @@ BEGIN
   END IF;
 
   UPDATE images
-  SET name = p_name,
-      uri = p_uri,
-      mimeType = p_mimeType,
-      bufferView = p_bufferView,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    name = COALESCE(p_name, name),
+    uri = COALESCE(p_uri, uri),
+    mimeType = COALESCE(p_mimeType, mimeType),
+    bufferView = COALESCE(p_bufferView, bufferView),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -613,13 +617,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_sampler(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_magFilter TEXT,
-  p_minFilter TEXT,
-  p_wrapS TEXT,
-  p_wrapT TEXT,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_name TEXT DEFAULT NULL,
+  p_magFilter TEXT DEFAULT NULL,
+  p_minFilter TEXT DEFAULT NULL,
+  p_wrapS TEXT DEFAULT NULL,
+  p_wrapT TEXT DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -628,13 +632,14 @@ BEGIN
   END IF;
 
   UPDATE samplers
-  SET name = p_name,
-      magFilter = p_magFilter,
-      minFilter = p_minFilter,
-      wrapS = p_wrapS,
-      wrapT = p_wrapT,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    name = COALESCE(p_name, name),
+    magFilter = COALESCE(p_magFilter, magFilter),
+    minFilter = COALESCE(p_minFilter, minFilter),
+    wrapS = COALESCE(p_wrapS, wrapS),
+    wrapT = COALESCE(p_wrapT, wrapT),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -683,11 +688,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_buffer(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_uri TEXT,
-  p_byteLength INTEGER,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_name TEXT DEFAULT NULL,
+  p_uri TEXT DEFAULT NULL,
+  p_byteLength INTEGER DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -696,11 +701,12 @@ BEGIN
   END IF;
 
   UPDATE buffers
-  SET name = p_name,
-      uri = p_uri,
-      byteLength = p_byteLength,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    name = COALESCE(p_name, name),
+    uri = COALESCE(p_uri, uri),
+    byteLength = COALESCE(p_byteLength, byteLength),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -752,14 +758,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_buffer_view(
   p_vircadia_uuid UUID,
-  p_buffer TEXT,
-  p_byteOffset INTEGER,
-  p_byteLength INTEGER,
-  p_byteStride INTEGER,
-  p_target TEXT,
-  p_name TEXT,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_buffer TEXT DEFAULT NULL,
+  p_byteOffset INTEGER DEFAULT NULL,
+  p_byteLength INTEGER DEFAULT NULL,
+  p_byteStride INTEGER DEFAULT NULL,
+  p_target TEXT DEFAULT NULL,
+  p_name TEXT DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -768,14 +774,15 @@ BEGIN
   END IF;
 
   UPDATE buffer_views
-  SET buffer = p_buffer,
-      byteOffset = p_byteOffset,
-      byteLength = p_byteLength,
-      byteStride = p_byteStride,
-      target = p_target,
-      name = p_name,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    buffer = COALESCE(p_buffer, buffer),
+    byteOffset = COALESCE(p_byteOffset, byteOffset),
+    byteLength = COALESCE(p_byteLength, byteLength),
+    byteStride = COALESCE(p_byteStride, byteStride),
+    target = COALESCE(p_target, target),
+    name = COALESCE(p_name, name),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -830,17 +837,17 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_accessor(
   p_vircadia_uuid UUID,
-  p_bufferView TEXT,
-  p_byteOffset INTEGER,
-  p_componentType INTEGER,
-  p_normalized BOOLEAN,
-  p_count INTEGER,
-  p_type TEXT,
-  p_max JSONB,
-  p_min JSONB,
-  p_name TEXT,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_bufferView TEXT DEFAULT NULL,
+  p_byteOffset INTEGER DEFAULT NULL,
+  p_componentType INTEGER DEFAULT NULL,
+  p_normalized BOOLEAN DEFAULT NULL,
+  p_count INTEGER DEFAULT NULL,
+  p_type TEXT DEFAULT NULL,
+  p_max JSONB DEFAULT NULL,
+  p_min JSONB DEFAULT NULL,
+  p_name TEXT DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -849,17 +856,18 @@ BEGIN
   END IF;
 
   UPDATE accessors
-  SET bufferView = p_bufferView,
-      byteOffset = p_byteOffset,
-      componentType = p_componentType,
-      normalized = p_normalized,
-      count = p_count,
-      type = p_type,
-      max = p_max,
-      min = p_min,
-      name = p_name,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    bufferView = COALESCE(p_bufferView, bufferView),
+    byteOffset = COALESCE(p_byteOffset, byteOffset),
+    componentType = COALESCE(p_componentType, componentType),
+    normalized = COALESCE(p_normalized, normalized),
+    count = COALESCE(p_count, count),
+    type = COALESCE(p_type, type),
+    max = COALESCE(p_max, max),
+    min = COALESCE(p_min, min),
+    name = COALESCE(p_name, name),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -909,12 +917,12 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_camera(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_type TEXT,
-  p_orthographic JSONB,
-  p_perspective JSONB,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_name TEXT DEFAULT NULL,
+  p_type TEXT DEFAULT NULL,
+  p_orthographic JSONB DEFAULT NULL,
+  p_perspective JSONB DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -923,12 +931,13 @@ BEGIN
   END IF;
 
   UPDATE cameras
-  SET name = p_name,
-      type = p_type,
-      orthographic = p_orthographic,
-      perspective = p_perspective,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    name = COALESCE(p_name, name),
+    type = COALESCE(p_type, type),
+    orthographic = COALESCE(p_orthographic, orthographic),
+    perspective = COALESCE(p_perspective, perspective),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -977,11 +986,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_animation(
   p_vircadia_uuid UUID,
-  p_name TEXT,
-  p_channels JSONB,
-  p_samplers JSONB,
-  p_extensions JSONB,
-  p_extras JSONB
+  p_name TEXT DEFAULT NULL,
+  p_channels JSONB DEFAULT NULL,
+  p_samplers JSONB DEFAULT NULL,
+  p_extensions JSONB DEFAULT NULL,
+  p_extras JSONB DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -990,11 +999,12 @@ BEGIN
   END IF;
 
   UPDATE animations
-  SET name = p_name,
-      channels = p_channels,
-      samplers = p_samplers,
-      extensions = p_extensions,
-      extras = p_extras
+  SET 
+    name = COALESCE(p_name, name),
+    channels = COALESCE(p_channels, channels),
+    samplers = COALESCE(p_samplers, samplers),
+    extensions = COALESCE(p_extensions, extensions),
+    extras = COALESCE(p_extras, extras)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -1015,4 +1025,3 @@ CREATE POLICY animations_select_policy ON animations FOR SELECT USING (true);
 CREATE POLICY animations_insert_policy ON animations FOR INSERT WITH CHECK (is_admin());
 CREATE POLICY animations_update_policy ON animations FOR UPDATE USING (is_admin());
 CREATE POLICY animations_delete_policy ON animations FOR DELETE USING (is_admin());
-

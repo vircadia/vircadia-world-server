@@ -8,8 +8,8 @@ ADD COLUMN role user_role NOT NULL DEFAULT 'guest';
 
 -- Define JSON schemas for extras
 
--- Common extras schema (for most tables)
-CREATE OR REPLACE FUNCTION common_extras_schema() RETURNS json AS $$
+-- Common entity properties schema
+CREATE OR REPLACE FUNCTION common_entity_properties_schema() RETURNS json AS $$
 BEGIN
   RETURN '{
     "type": "object",
@@ -27,28 +27,28 @@ BEGIN
               "lod": {
                 "type": "object",
                 "properties": {
-                  "mode": { "type": ["string", "null"], "enum": ["distance", "size", null] },
-                  "auto": { "type": ["boolean", "null"] },
-                  "distance": { "type": ["number", "null"] },
-                  "size": { "type": ["number", "null"] },
-                  "hide": { "type": ["number", "null"] }
+                  "mode": { "type": "string", "enum": ["distance", "size"] },
+                  "auto": { "type": "boolean" },
+                  "distance": { "type": "number" },
+                  "size": { "type": "number" },
+                  "hide": { "type": "number" }
                 }
               },
               "billboard": {
                 "type": "object",
                 "properties": {
-                  "mode": { "type": ["integer", "null"], "enum": [0, 1, 2, 4, 7, null] }
+                  "mode": { "type": "integer", "enum": [0, 1, 2, 4, 7] }
                 }
               },
               "lightmap": {
                 "type": "object",
                 "properties": {
-                  "lightmap": { "type": ["string", "null"] },
-                  "level": { "type": ["integer", "null"] },
-                  "color_space": { "type": ["string", "null"], "enum": ["linear", "sRGB", "gamma", null] },
-                  "texcoord": { "type": ["integer", "null"] },
-                  "use_as_shadowmap": { "type": ["boolean", "null"] },
-                  "mode": { "type": ["string", "null"], "enum": ["default", "shadowsOnly", "specular", null] }
+                  "lightmap": { "type": "string" },
+                  "level": { "type": "integer" },
+                  "color_space": { "type": "string", "enum": ["linear", "sRGB", "gamma"] },
+                  "texcoord": { "type": "integer" },
+                  "use_as_shadowmap": { "type": "boolean" },
+                  "mode": { "type": "string", "enum": ["default", "shadowsOnly", "specular"] }
                 }
               },
               "script": {
@@ -81,17 +81,15 @@ BEGIN
               }
             }
           }
-        },
-        "required": ["name", "version", "createdAt", "updatedAt", "babylonjs"]
+        }
       }
-    },
-    "required": ["vircadia"]
+    }
   }'::json;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
--- World glTF extras schema
-CREATE OR REPLACE FUNCTION world_gltf_extras_schema() RETURNS json AS $$
+-- Scene-specific schema
+CREATE OR REPLACE FUNCTION scene_specific_schema() RETURNS json AS $$
 BEGIN
   RETURN '{
     "type": "object",
@@ -99,145 +97,145 @@ BEGIN
       "vircadia": {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-          "version": { "type": "string" },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "updatedAt": { "type": "string", "format": "date-time" }
-        },
-        "required": ["name", "version", "createdAt", "updatedAt"]
+          "babylonjs": {
+            "type": "object",
+            "properties": {
+              "scene": {
+                "type": "object",
+                "properties": {
+                  "clearColor": {
+                    "type": "object",
+                    "properties": {
+                      "r": { "type": "number" },
+                      "g": { "type": "number" },
+                      "b": { "type": "number" }
+                    },
+                    "required": ["r", "g", "b"]
+                  },
+                  "ambientColor": {
+                    "type": "object",
+                    "properties": {
+                      "r": { "type": "number" },
+                      "g": { "type": "number" },
+                      "b": { "type": "number" }
+                    },
+                    "required": ["r", "g", "b"]
+                  },
+                  "gravity": {
+                    "type": "object",
+                    "properties": {
+                      "x": { "type": "number" },
+                      "y": { "type": "number" },
+                      "z": { "type": "number" }
+                    },
+                    "required": ["x", "y", "z"]
+                  },
+                  "activeCamera": { "type": "string" },
+                  "collisionsEnabled": { "type": "boolean" },
+                  "physicsEnabled": { "type": "boolean" },
+                  "physicsGravity": {
+                    "type": "object",
+                    "properties": {
+                      "x": { "type": "number" },
+                      "y": { "type": "number" },
+                      "z": { "type": "number" }
+                    },
+                    "required": ["x", "y", "z"]
+                  },
+                  "physicsEngine": { "type": "string" },
+                  "autoAnimate": { "type": "boolean" },
+                  "autoAnimateFrom": { "type": "number" },
+                  "autoAnimateTo": { "type": "number" },
+                  "autoAnimateLoop": { "type": "boolean" },
+                  "autoAnimateSpeed": { "type": "number" }
+                }
+              }
+            }
+          }
+        }
       }
-    },
-    "required": ["vircadia"]
+    }
   }'::json;
-END;
-$$ LANGUAGE plpgsql IMMUTABLE;
-
--- Scene extras schema
-CREATE OR REPLACE FUNCTION scene_extras_schema() RETURNS json AS $$
-DECLARE
-  base_schema json;
-  scene_specific json;
-BEGIN
-  base_schema := (SELECT common_extras_schema());
-  scene_specific := json_build_object(
-    'type', 'object',
-    'properties', json_build_object(
-      'vircadia', json_build_object(
-        'type', 'object',
-        'properties', json_build_object(
-          'babylonjs', json_build_object(
-            'type', 'object',
-            'properties', json_build_object(
-              'clearColor', json_build_object(
-                'type', 'object',
-                'properties', json_build_object(
-                  'r', json_build_object('type', 'number'),
-                  'g', json_build_object('type', 'number'),
-                  'b', json_build_object('type', 'number')
-                ),
-                'required', array['r', 'g', 'b']
-              ),
-              'ambientColor', json_build_object(
-                'type', 'object',
-                'properties', json_build_object(
-                  'r', json_build_object('type', 'number'),
-                  'g', json_build_object('type', 'number'),
-                  'b', json_build_object('type', 'number')
-                ),
-                'required', array['r', 'g', 'b']
-              ),
-              'gravity', json_build_object(
-                'type', 'object',
-                'properties', json_build_object(
-                  'x', json_build_object('type', 'number'),
-                  'y', json_build_object('type', 'number'),
-                  'z', json_build_object('type', 'number')
-                ),
-                'required', array['x', 'y', 'z']
-              ),
-              'activeCamera', json_build_object('type', 'string'),
-              'collisionsEnabled', json_build_object('type', 'boolean'),
-              'physicsEnabled', json_build_object('type', 'boolean'),
-              'physicsGravity', json_build_object(
-                'type', 'object',
-                'properties', json_build_object(
-                  'x', json_build_object('type', 'number'),
-                  'y', json_build_object('type', 'number'),
-                  'z', json_build_object('type', 'number')
-                ),
-                'required', array['x', 'y', 'z']
-              ),
-              'physicsEngine', json_build_object('type', 'string'),
-              'autoAnimate', json_build_object('type', 'boolean'),
-              'autoAnimateFrom', json_build_object('type', 'number'),
-              'autoAnimateTo', json_build_object('type', 'number'),
-              'autoAnimateLoop', json_build_object('type', 'boolean'),
-              'autoAnimateSpeed', json_build_object('type', 'number')
-            )
-          )
-        )
-      )
-    )
-  );
-  RETURN json_build_object(
-    'allOf', json_build_array(base_schema, scene_specific)
-  );
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 -- Apply JSON schemas to the respective tables
 ALTER TABLE world_gltf
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT world_gltf_extras_valid
-CHECK (extensions.jsonb_matches_schema(world_gltf_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE scenes
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT scenes_extras_valid
-CHECK (extensions.jsonb_matches_schema(scene_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(
+  json_build_object(
+    'allOf', 
+    json_build_array(
+      common_entity_properties_schema(),
+      scene_specific_schema()
+    )
+  ),
+  extras
+));
 
+-- Apply common entity properties schema to other tables
 ALTER TABLE nodes
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT nodes_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE meshes
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT meshes_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE materials
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT materials_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE textures
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT textures_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE images
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT images_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE samplers
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT samplers_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE animations
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT animations_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE skins
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT skins_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE cameras
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT cameras_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE buffers
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT buffers_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE buffer_views
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT buffer_views_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
 
 ALTER TABLE accessors
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 ADD CONSTRAINT accessors_extras_valid
-CHECK (extensions.jsonb_matches_schema(common_extras_schema(), extras));
+CHECK (extensions.jsonb_matches_schema(common_entity_properties_schema(), extras));
