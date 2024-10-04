@@ -2,56 +2,6 @@
 -- If for some reason it falls out alignment with the ability to serialize without much conversion to glTF 2.0, then please update the migration to conform again.
 -- Any fields prefixed with "vircadia_" are custom and not compliant with glTF 2.0, and need to be moved to and from "extras" as needed.
 
--- NOTE: ALL EXTENSIONS MUST BE ACTIVATED HERE.
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
--- Enable pg_jsonschema extension for JSON schema validation
-CREATE EXTENSION IF NOT EXISTS pg_jsonschema WITH SCHEMA extensions;
-
---
---
--- AGENTS
---
---
-
-CREATE TYPE agent_role AS ENUM ('guest', 'member', 'admin');
-
--- Create the agent_profiles table
-CREATE TABLE public.agent_profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    username TEXT UNIQUE,
-    role agent_role NOT NULL DEFAULT 'guest',
-    createdat TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updatedat TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Create a trigger to automatically update the updatedat column
-CREATE OR REPLACE FUNCTION update_agent_profiles_modified_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updatedat = now();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_agent_profiles_modtime
-BEFORE UPDATE ON agent_profiles
-FOR EACH ROW EXECUTE FUNCTION update_agent_profiles_modified_column();
-
--- Create a trigger to automatically create a profile entry when a new user signs up
-CREATE OR REPLACE FUNCTION public.handle_new_agent()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.agent_profiles (id, username, role)
-  VALUES (new.id, new.raw_user_meta_data->>'username', 'guest');
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_agent();
-
 --
 --
 -- WORLD_GLTF
@@ -538,46 +488,6 @@ CREATE TABLE animations (
 
 --
 --
--- CAMERAS
---
---
-
--- Create the cameras table
-CREATE TABLE cameras (
-    vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
-    vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
-
-    name TEXT,
-    type TEXT NOT NULL,
-    orthographic JSONB,
-    perspective JSONB,
-    extensions JSONB,
-    extras JSONB,
-    CONSTRAINT check_camera_type CHECK (type IN ('perspective', 'orthographic')),
-
-    -- New properties
-    
-    vircadia_version TEXT,
-    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
-    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
-    vircadia_babylonjs_lod_mode TEXT,
-    vircadia_babylonjs_lod_auto BOOLEAN,
-    vircadia_babylonjs_lod_distance NUMERIC,
-    vircadia_babylonjs_lod_size NUMERIC,
-    vircadia_babylonjs_lod_hide NUMERIC,
-    vircadia_babylonjs_billboard_mode INTEGER,
-    vircadia_babylonjs_light_lightmap TEXT,
-    vircadia_babylonjs_light_level NUMERIC,
-    vircadia_babylonjs_light_color_space TEXT,
-    vircadia_babylonjs_light_texcoord INTEGER,
-    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
-    vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
-);
-
---
---
 -- SKINS
 --
 --
@@ -617,15 +527,54 @@ CREATE TABLE skins (
 
 --
 --
--- GENERAL SETUP
+-- CAMERAS
 --
 --
 
--- Create a trigger function to update the vircadia_updatedat column
-CREATE OR REPLACE FUNCTION update_modified_column()
+-- Create the cameras table
+CREATE TABLE cameras (
+    vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
+    vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
+
+    name TEXT,
+    type TEXT NOT NULL,
+    orthographic JSONB,
+    perspective JSONB,
+    extensions JSONB,
+    extras JSONB,
+
+    -- New properties
+    
+    vircadia_version TEXT,
+    vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_babylonjs_lod_mode TEXT,
+    vircadia_babylonjs_lod_auto BOOLEAN,
+    vircadia_babylonjs_lod_distance NUMERIC,
+    vircadia_babylonjs_lod_size NUMERIC,
+    vircadia_babylonjs_lod_hide NUMERIC,
+    vircadia_babylonjs_billboard_mode INTEGER,
+    vircadia_babylonjs_light_lightmap TEXT,
+    vircadia_babylonjs_light_level NUMERIC,
+    vircadia_babylonjs_light_color_space TEXT,
+    vircadia_babylonjs_light_texcoord INTEGER,
+    vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
+    vircadia_babylonjs_light_mode TEXT,
+    vircadia_babylonjs_script_agent_scripts JSONB,
+    vircadia_babylonjs_script_persistent_scripts JSONB
+);
+
+
+-- 
+-- 
+-- GENERAL SETUP
+-- 
+-- 
+
+CREATE OR REPLACE FUNCTION update_base_table_modified_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.vircadia_updatedat = now();
+    NEW.updatedat = now();
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -633,59 +582,59 @@ $$ LANGUAGE plpgsql;
 -- Apply the trigger to all tables with vircadia_updatedat column
 CREATE TRIGGER update_world_gltf_modtime
 BEFORE UPDATE ON world_gltf
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_scenes_modtime
 BEFORE UPDATE ON scenes
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_nodes_modtime
 BEFORE UPDATE ON nodes
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_meshes_modtime
 BEFORE UPDATE ON meshes
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_materials_modtime
 BEFORE UPDATE ON materials
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_textures_modtime
 BEFORE UPDATE ON textures
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_images_modtime
 BEFORE UPDATE ON images
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_samplers_modtime
 BEFORE UPDATE ON samplers
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_buffers_modtime
 BEFORE UPDATE ON buffers
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_buffer_views_modtime
 BEFORE UPDATE ON buffer_views
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_accessors_modtime
 BEFORE UPDATE ON accessors
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_animations_modtime
 BEFORE UPDATE ON animations
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_cameras_modtime
 BEFORE UPDATE ON cameras
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 CREATE TRIGGER update_skins_modtime
 BEFORE UPDATE ON skins
-FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 -- Enable RLS for all tables
 ALTER TABLE agent_profiles ENABLE ROW LEVEL SECURITY;
