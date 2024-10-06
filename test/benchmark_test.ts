@@ -1,9 +1,11 @@
 import * as SupabaseTypes from "jsr:@supabase/supabase-js";
 import { createClient } from "jsr:@supabase/supabase-js";
+import { log } from "../modules/general/log.ts";
 import { Supabase } from "../modules/supabase/supabase_manager.ts";
 
 // Constants
-const TEST_PREFIX = "ENHANCED_TEST_";
+const TEST_NAME = "Vircadia World Realtime Benchmark";
+const TEST_PREFIX = "REALTIME_BENCHMARK_TEST_";
 const UPDATE_RATE = 20; // updates per second
 const TEST_DURATION = 60; // seconds
 
@@ -110,7 +112,7 @@ async function runVehicleTest(
     client: SupabaseTypes.SupabaseClient,
     worldId: string,
 ): Promise<TestResults> {
-    console.log("Running Vehicle Test...");
+    log({ message: "Running Vehicle Test...", type: "info" });
     const NUM_VEHICLES = 20;
     const PLAYERS_PER_VEHICLE = 2;
     const vehicles: string[] = [];
@@ -128,11 +130,16 @@ async function runVehicleTest(
             );
             players.push(playerId);
         }
+        log({
+            message: `Created vehicle ${i + 1}/${NUM_VEHICLES}`,
+            type: "debug",
+        });
     }
 
     const startTime = performance.now();
     const latencies: number[] = [];
     let totalOperations = 0;
+    let updateCount = 0;
 
     while (performance.now() - startTime < TEST_DURATION * 1000) {
         const updateStartTime = performance.now();
@@ -158,11 +165,19 @@ async function runVehicleTest(
 
         const { error } = await client.from("nodes").upsert(updates);
         if (error) {
-            console.error("Error updating nodes:", error);
+            log({ message: `Error updating nodes: ${error}`, type: "error" });
         }
 
         const updateEndTime = performance.now();
         latencies.push(updateEndTime - updateStartTime);
+
+        updateCount++;
+        log({
+            message: `Vehicle Test: Update ${updateCount} / ${
+                UPDATE_RATE * TEST_DURATION
+            }`,
+            type: "debug",
+        });
 
         await new Promise((resolve) => setTimeout(resolve, 1000 / UPDATE_RATE));
     }
@@ -186,7 +201,7 @@ async function runPedestrianTest(
     client: SupabaseTypes.SupabaseClient,
     worldId: string,
 ): Promise<TestResults> {
-    console.log("Running Pedestrian Test...");
+    log({ message: "Running Pedestrian Test...", type: "info" });
     const NUM_PEDESTRIANS = 400;
     const ITEMS_PER_PEDESTRIAN = 5;
     const pedestrians: string[] = [];
@@ -204,11 +219,16 @@ async function runPedestrianTest(
             );
             items.push(itemId);
         }
+        log({
+            message: `Created pedestrian ${i + 1}/${NUM_PEDESTRIANS}`,
+            type: "debug",
+        });
     }
 
     const startTime = performance.now();
     const latencies: number[] = [];
     let totalOperations = 0;
+    let updateCount = 0;
 
     while (performance.now() - startTime < TEST_DURATION * 1000) {
         const updateStartTime = performance.now();
@@ -233,11 +253,19 @@ async function runPedestrianTest(
 
         const { error } = await client.from("nodes").upsert(updates);
         if (error) {
-            console.error("Error updating nodes:", error);
+            log({ message: `Error updating nodes: ${error}`, type: "error" });
         }
 
         const updateEndTime = performance.now();
         latencies.push(updateEndTime - updateStartTime);
+
+        updateCount++;
+        log({
+            message: `Pedestrian Test: Update ${updateCount} / ${
+                UPDATE_RATE * TEST_DURATION
+            }`,
+            type: "debug",
+        });
 
         await new Promise((resolve) => setTimeout(resolve, 1000 / UPDATE_RATE));
     }
@@ -261,7 +289,7 @@ async function runEnvironmentTest(
     client: SupabaseTypes.SupabaseClient,
     worldId: string,
 ): Promise<TestResults> {
-    console.log("Running Environment Test...");
+    log({ message: "Running Environment Test...", type: "info" });
     const NUM_ENVIRONMENT_OBJECTS = 2000;
     const environmentObjects: string[] = [];
 
@@ -269,11 +297,20 @@ async function runEnvironmentTest(
     for (let i = 0; i < NUM_ENVIRONMENT_OBJECTS; i++) {
         const objectId = await createEnvironmentObject(client, worldId, i);
         environmentObjects.push(objectId);
+        if ((i + 1) % 100 === 0) {
+            log({
+                message: `Created environment object ${
+                    i + 1
+                }/${NUM_ENVIRONMENT_OBJECTS}`,
+                type: "debug",
+            });
+        }
     }
 
     const startTime = performance.now();
     const latencies: number[] = [];
     let totalOperations = 0;
+    let updateCount = 0;
 
     while (performance.now() - startTime < TEST_DURATION * 1000) {
         const updateStartTime = performance.now();
@@ -295,11 +332,19 @@ async function runEnvironmentTest(
 
         const { error } = await client.from("nodes").upsert(updates);
         if (error) {
-            console.error("Error updating nodes:", error);
+            log({ message: `Error updating nodes: ${error}`, type: "error" });
         }
 
         const updateEndTime = performance.now();
         latencies.push(updateEndTime - updateStartTime);
+
+        updateCount++;
+        log({
+            message: `Environment Test: Update ${updateCount} / ${
+                UPDATE_RATE * TEST_DURATION
+            }`,
+            type: "debug",
+        });
 
         await new Promise((resolve) => setTimeout(resolve, 1000 / UPDATE_RATE));
     }
@@ -323,7 +368,7 @@ async function runHolisticTest(
     client: SupabaseTypes.SupabaseClient,
     worldId: string,
 ): Promise<TestResults> {
-    console.log("Running Holistic Test...");
+    log({ message: "Running Holistic Test...", type: "info" });
 
     const vehicleResults = await runVehicleTest(client, worldId);
     const pedestrianResults = await runPedestrianTest(client, worldId);
@@ -352,24 +397,40 @@ async function runHolisticTest(
 
 // Result analysis and printing
 function analyzeResults(results: TestResults): void {
-    console.log(`Total operations: ${results.totalOperations}`);
-    console.log(
-        `Operations per second: ${results.operationsPerSecond.toFixed(2)}`,
-    );
-    console.log(`Min latency: ${results.minLatency.toFixed(2)} ms`);
-    console.log(`Max latency: ${results.maxLatency.toFixed(2)} ms`);
-    console.log(`Average latency: ${results.avgLatency.toFixed(2)} ms`);
+    log({
+        message: `Total operations: ${results.totalOperations}`,
+        type: "info",
+    });
+    log({
+        message: `Operations per second: ${
+            results.operationsPerSecond.toFixed(2)
+        }`,
+        type: "info",
+    });
+    log({
+        message: `Min latency: ${results.minLatency.toFixed(2)} ms`,
+        type: "info",
+    });
+    log({
+        message: `Max latency: ${results.maxLatency.toFixed(2)} ms`,
+        type: "info",
+    });
+    log({
+        message: `Average latency: ${results.avgLatency.toFixed(2)} ms`,
+        type: "info",
+    });
 
     // Calculate percentiles
     const sortedLatencies = results.latencies.sort((a, b) => a - b);
     const percentiles = [50, 75, 90, 95, 99];
     for (const p of percentiles) {
         const index = Math.floor(sortedLatencies.length * p / 100);
-        console.log(
-            `${p}th percentile latency: ${
+        log({
+            message: `${p}th percentile latency: ${
                 sortedLatencies[index].toFixed(2)
             } ms`,
-        );
+            type: "info",
+        });
     }
 }
 
@@ -379,27 +440,30 @@ function printResults(
     environmentResults: TestResults,
     holisticResults: TestResults,
 ): void {
-    console.log("\nEnhanced Supabase MMO Realtime DB Benchmark Results:");
-    console.log("\nVehicle Test Results:");
+    log({
+        message: "\n${TEST_NAME} Results:",
+        type: "info",
+    });
+    log({ message: "\nVehicle Test Results:", type: "info" });
     analyzeResults(vehicleResults);
-    console.log("\nPedestrian Test Results:");
+    log({ message: "\nPedestrian Test Results:", type: "info" });
     analyzeResults(pedestrianResults);
-    console.log("\nEnvironment Test Results:");
+    log({ message: "\nEnvironment Test Results:", type: "info" });
     analyzeResults(environmentResults);
-    console.log("\nHolistic Test Results:");
+    log({ message: "\nHolistic Test Results:", type: "info" });
     analyzeResults(holisticResults);
 }
 
 // Main benchmark function
-async function runEnhancedBenchmark(
+async function runBenchmark(
     client: SupabaseTypes.SupabaseClient,
 ): Promise<void> {
     const { data: worldData, error: worldError } = await client.from(
         "world_gltf",
     ).insert({
-        name: `${TEST_PREFIX}Benchmark World`,
+        name: `${TEST_PREFIX}World`,
         version: "1.0.0",
-        metadata: { description: "A world for enhanced benchmark testing" },
+        metadata: { description: "A world for benchmark testing" },
         asset: { version: "2.0" },
     }).select().single();
 
@@ -422,40 +486,50 @@ async function runEnhancedBenchmark(
     );
 
     // Clean up
+    log({ message: "Cleaning up test data...", type: "info" });
     await client.from("nodes").delete().like("name", `${TEST_PREFIX}%`);
     await client.from("world_gltf").delete().eq("vircadia_uuid", worldId);
+    log({ message: "Cleanup completed", type: "success" });
 }
 
 // Main test function
-Deno.test("Enhanced Supabase MMO Realtime DB Benchmark", async () => {
-    console.log("Starting Enhanced Supabase MMO Realtime DB Benchmark test");
+Deno.test(TEST_NAME, async () => {
+    log({
+        message: `Starting ${TEST_NAME}`,
+        type: "info",
+    });
 
     // Initialize Supabase
-    console.log("Initializing Supabase...");
+    log({ message: "Initializing Supabase...", type: "info" });
     const supabase = Supabase.getInstance(true); // Enable debug mode
     await supabase.initializeAndStart({ forceRestart: false });
-    console.log("Supabase initialized successfully");
+    log({ message: "Supabase initialized successfully", type: "success" });
 
     // Get Supabase status
-    console.log("Getting Supabase status...");
+    log({ message: "Getting Supabase status...", type: "info" });
     const status = await supabase.getStatus();
-    console.log("Supabase status:", status);
+    log({
+        message: `Supabase status: ${JSON.stringify(status)}`,
+        type: "info",
+    });
 
     // Create Supabase client
-    console.log("Creating Supabase client...");
+    log({ message: "Creating Supabase client...", type: "info" });
     const supabaseUrl = `http://${status.api.host}:${status.api.port}`;
     const supabaseKey = status.anonKey || "";
     const client = createClient(supabaseUrl, supabaseKey);
-    console.log("Supabase client created successfully");
+    log({ message: "Supabase client created successfully", type: "success" });
 
     // Sign in with the test user
-    console.log("Signing in with test user...");
+    log({ message: "Signing in with test user...", type: "info" });
     const testUserEmail = Deno.env.get("TEST_USER_EMAIL");
     const testUserPassword = Deno.env.get("TEST_USER_PASSWORD");
     if (!testUserEmail || !testUserPassword) {
-        console.error(
-            "TEST_USER_EMAIL or TEST_USER_PASSWORD environment variable is not set.",
-        );
+        log({
+            message:
+                "TEST_USER_EMAIL or TEST_USER_PASSWORD environment variable is not set.",
+            type: "error",
+        });
         return;
     }
 
@@ -465,21 +539,27 @@ Deno.test("Enhanced Supabase MMO Realtime DB Benchmark", async () => {
     });
 
     if (authError) {
-        console.error("Error signing in:", authError);
+        log({ message: `Error signing in: ${authError}`, type: "error" });
         return;
     }
-    console.log("Signed in as test user successfully");
+    log({ message: "Signed in as test user successfully", type: "success" });
 
     try {
-        await runEnhancedBenchmark(client);
+        await runBenchmark(client);
     } catch (error) {
-        console.error("Test failed:", error.message);
+        log({ message: `Test failed: ${error.message}`, type: "error" });
     } finally {
         // Clean up resources
-        console.log("Cleaning up resources...");
+        log({ message: "Cleaning up resources...", type: "info" });
         await client.auth.signOut();
-        console.log("Signed out and cleaned up resources");
+        log({
+            message: "Signed out and cleaned up resources",
+            type: "success",
+        });
     }
 
-    console.log("Enhanced Supabase MMO Realtime DB Benchmark test completed");
+    log({
+        message: `${TEST_NAME} completed`,
+        type: "success",
+    });
 });
