@@ -574,7 +574,7 @@ CREATE TABLE cameras (
 CREATE OR REPLACE FUNCTION update_base_table_modified_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updatedat = now();
+    NEW.vircadia_updatedat = now();
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
