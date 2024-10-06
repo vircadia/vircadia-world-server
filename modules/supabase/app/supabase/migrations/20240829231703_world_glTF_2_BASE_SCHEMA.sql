@@ -106,8 +106,8 @@ CREATE TABLE nodes (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -144,8 +144,8 @@ CREATE TABLE meshes (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -203,8 +203,8 @@ CREATE TABLE materials (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -241,8 +241,8 @@ CREATE TABLE textures (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -280,8 +280,8 @@ CREATE TABLE images (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -320,8 +320,8 @@ CREATE TABLE samplers (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -358,8 +358,8 @@ CREATE TABLE buffers (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -399,8 +399,8 @@ CREATE TABLE buffer_views (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -444,8 +444,8 @@ CREATE TABLE accessors (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -482,8 +482,8 @@ CREATE TABLE animations (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -521,8 +521,8 @@ CREATE TABLE skins (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 --
@@ -560,8 +560,8 @@ CREATE TABLE cameras (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts JSONB,
-    vircadia_babylonjs_script_persistent_scripts JSONB
+    vircadia_babylonjs_script_agent_scripts TEXT[],
+    vircadia_babylonjs_script_persistent_scripts TEXT[]
 );
 
 

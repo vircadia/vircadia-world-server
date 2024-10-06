@@ -241,8 +241,8 @@ CREATE OR REPLACE FUNCTION create_node(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -301,8 +301,8 @@ CREATE OR REPLACE FUNCTION update_node(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -384,8 +384,8 @@ CREATE OR REPLACE FUNCTION create_mesh(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -437,8 +437,8 @@ CREATE OR REPLACE FUNCTION update_mesh(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -519,8 +519,8 @@ CREATE OR REPLACE FUNCTION create_material(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -580,8 +580,8 @@ CREATE OR REPLACE FUNCTION update_material(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -662,8 +662,8 @@ CREATE OR REPLACE FUNCTION create_texture(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -715,8 +715,8 @@ CREATE OR REPLACE FUNCTION update_texture(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -792,8 +792,8 @@ CREATE OR REPLACE FUNCTION create_image(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -846,8 +846,8 @@ CREATE OR REPLACE FUNCTION update_image(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -925,8 +925,8 @@ CREATE OR REPLACE FUNCTION create_sampler(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -980,8 +980,8 @@ CREATE OR REPLACE FUNCTION update_sampler(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -1058,8 +1058,8 @@ CREATE OR REPLACE FUNCTION create_buffer(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -1111,8 +1111,8 @@ CREATE OR REPLACE FUNCTION update_buffer(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -1190,8 +1190,8 @@ CREATE OR REPLACE FUNCTION create_buffer_view(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -1246,8 +1246,8 @@ CREATE OR REPLACE FUNCTION update_buffer_view(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -1332,8 +1332,8 @@ CREATE OR REPLACE FUNCTION create_accessor(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -1394,8 +1394,8 @@ CREATE OR REPLACE FUNCTION update_accessor(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -1477,8 +1477,8 @@ CREATE OR REPLACE FUNCTION create_animation(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -1530,8 +1530,8 @@ CREATE OR REPLACE FUNCTION update_animation(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -1607,8 +1607,8 @@ CREATE OR REPLACE FUNCTION create_camera(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -1661,8 +1661,8 @@ CREATE OR REPLACE FUNCTION update_camera(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -1739,8 +1739,8 @@ CREATE OR REPLACE FUNCTION create_skin(
   p_vircadia_babylonjs_light_texcoord INTEGER,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
   p_vircadia_babylonjs_light_mode TEXT,
-  p_vircadia_babylonjs_script_agent_scripts JSONB,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB
+  p_vircadia_babylonjs_script_agent_scripts TEXT[],
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[]
 )
 RETURNS UUID AS $$
 DECLARE
@@ -1793,8 +1793,8 @@ CREATE OR REPLACE FUNCTION update_skin(
   p_vircadia_babylonjs_light_texcoord INTEGER DEFAULT NULL,
   p_vircadia_babylonjs_light_use_as_shadowmap BOOLEAN DEFAULT NULL,
   p_vircadia_babylonjs_light_mode TEXT DEFAULT NULL,
-  p_vircadia_babylonjs_script_agent_scripts JSONB DEFAULT NULL,
-  p_vircadia_babylonjs_script_persistent_scripts JSONB DEFAULT NULL
+  p_vircadia_babylonjs_script_agent_scripts TEXT[] DEFAULT NULL,
+  p_vircadia_babylonjs_script_persistent_scripts TEXT[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
