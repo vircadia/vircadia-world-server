@@ -3,10 +3,10 @@
 CREATE OR REPLACE FUNCTION create_world_gltf_metadata(
   p_world_gltf_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -16,8 +16,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create world_gltf metadata entries';
   END IF;
 
-  INSERT INTO world_gltf_metadata (world_gltf_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_world_gltf_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO world_gltf_metadata (world_gltf_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_world_gltf_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -26,10 +26,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_world_gltf_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -40,10 +40,10 @@ BEGIN
   UPDATE world_gltf_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -64,10 +64,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_scene_metadata(
   p_scene_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -77,8 +77,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create scene metadata entries';
   END IF;
 
-  INSERT INTO scenes_metadata (scene_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_scene_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO scenes_metadata (scene_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_scene_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -87,10 +87,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_scene_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -101,10 +101,10 @@ BEGIN
   UPDATE scenes_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -125,10 +125,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_node_metadata(
   p_node_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -138,8 +138,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create node metadata entries';
   END IF;
 
-  INSERT INTO nodes_metadata (node_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_node_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO nodes_metadata (node_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_node_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -148,10 +148,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_node_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -162,10 +162,10 @@ BEGIN
   UPDATE nodes_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -186,10 +186,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_mesh_metadata(
   p_mesh_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -199,8 +199,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create mesh metadata entries';
   END IF;
 
-  INSERT INTO meshes_metadata (mesh_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_mesh_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO meshes_metadata (mesh_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_mesh_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -209,10 +209,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_mesh_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -223,10 +223,10 @@ BEGIN
   UPDATE meshes_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -247,10 +247,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_material_metadata(
   p_material_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -260,8 +260,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create material metadata entries';
   END IF;
 
-  INSERT INTO materials_metadata (material_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_material_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO materials_metadata (material_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_material_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -270,10 +270,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_material_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -284,10 +284,10 @@ BEGIN
   UPDATE materials_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -308,10 +308,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_texture_metadata(
   p_texture_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -321,8 +321,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create texture metadata entries';
   END IF;
 
-  INSERT INTO textures_metadata (texture_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_texture_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO textures_metadata (texture_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_texture_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -331,10 +331,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_texture_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -345,10 +345,10 @@ BEGIN
   UPDATE textures_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -369,10 +369,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_image_metadata(
   p_image_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -382,8 +382,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create image metadata entries';
   END IF;
 
-  INSERT INTO images_metadata (image_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_image_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO images_metadata (image_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_image_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -392,10 +392,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_image_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -406,10 +406,10 @@ BEGIN
   UPDATE images_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -430,10 +430,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_sampler_metadata(
   p_sampler_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -443,8 +443,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create sampler metadata entries';
   END IF;
 
-  INSERT INTO samplers_metadata (sampler_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_sampler_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO samplers_metadata (sampler_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_sampler_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -453,10 +453,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_sampler_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -467,10 +467,10 @@ BEGIN
   UPDATE samplers_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -491,10 +491,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_buffer_metadata(
   p_buffer_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -504,8 +504,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create buffer metadata entries';
   END IF;
 
-  INSERT INTO buffers_metadata (buffer_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_buffer_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO buffers_metadata (buffer_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_buffer_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -514,10 +514,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_buffer_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -528,10 +528,10 @@ BEGIN
   UPDATE buffers_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -552,10 +552,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_buffer_view_metadata(
   p_buffer_view_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -565,8 +565,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create buffer view metadata entries';
   END IF;
 
-  INSERT INTO buffer_views_metadata (buffer_view_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_buffer_view_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO buffer_views_metadata (buffer_view_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_buffer_view_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -575,10 +575,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_buffer_view_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -589,10 +589,10 @@ BEGIN
   UPDATE buffer_views_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -613,10 +613,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_accessor_metadata(
   p_accessor_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -626,8 +626,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create accessor metadata entries';
   END IF;
 
-  INSERT INTO accessors_metadata (accessor_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_accessor_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO accessors_metadata (accessor_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_accessor_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -636,10 +636,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_accessor_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -650,10 +650,10 @@ BEGIN
   UPDATE accessors_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -674,10 +674,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_animation_metadata(
   p_animation_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -687,8 +687,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create animation metadata entries';
   END IF;
 
-  INSERT INTO animations_metadata (animation_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_animation_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO animations_metadata (animation_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_animation_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -697,10 +697,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_animation_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -711,10 +711,10 @@ BEGIN
   UPDATE animations_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -735,10 +735,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_skin_metadata(
   p_skin_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -748,8 +748,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create skin metadata entries';
   END IF;
 
-  INSERT INTO skins_metadata (skin_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_skin_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO skins_metadata (skin_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_skin_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -758,10 +758,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_skin_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -772,10 +772,10 @@ BEGIN
   UPDATE skins_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -788,7 +788,7 @@ BEGIN
   END IF;
 
   DELETE FROM skins_metadata WHERE metadata_id = p_metadata_id;
-  END;
+END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Cameras Metadata
@@ -796,10 +796,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION create_camera_metadata(
   p_camera_id UUID,
   p_key TEXT,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
@@ -809,8 +809,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create camera metadata entries';
   END IF;
 
-  INSERT INTO cameras_metadata (camera_id, key, value_text, value_numeric, value_boolean, value_timestamp)
-  VALUES (p_camera_id, p_key, p_value_text, p_value_numeric, p_value_boolean, p_value_timestamp)
+  INSERT INTO cameras_metadata (camera_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  VALUES (p_camera_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
@@ -819,10 +819,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION update_camera_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
-  p_value_text TEXT DEFAULT NULL,
-  p_value_numeric NUMERIC DEFAULT NULL,
-  p_value_boolean BOOLEAN DEFAULT NULL,
-  p_value_timestamp TIMESTAMPTZ DEFAULT NULL
+  p_values_text TEXT[] DEFAULT NULL,
+  p_values_numeric NUMERIC[] DEFAULT NULL,
+  p_values_boolean BOOLEAN[] DEFAULT NULL,
+  p_values_timestamp TIMESTAMPTZ[] DEFAULT NULL
 )
 RETURNS VOID AS $$
 BEGIN
@@ -833,10 +833,10 @@ BEGIN
   UPDATE cameras_metadata
   SET 
     key = COALESCE(p_key, key),
-    value_text = COALESCE(p_value_text, value_text),
-    value_numeric = COALESCE(p_value_numeric, value_numeric),
-    value_boolean = COALESCE(p_value_boolean, value_boolean),
-    value_timestamp = COALESCE(p_value_timestamp, value_timestamp)
+    values_text = COALESCE(p_values_text, values_text),
+    values_numeric = COALESCE(p_values_numeric, values_numeric),
+    values_boolean = COALESCE(p_values_boolean, values_boolean),
+    values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

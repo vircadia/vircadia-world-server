@@ -2,12 +2,13 @@ import * as SupabaseTypes from "jsr:@supabase/supabase-js";
 import { createClient } from "jsr:@supabase/supabase-js";
 import { log } from "../modules/general/log.ts";
 import { Supabase } from "../modules/supabase/supabase_manager.ts";
+import { World } from "../modules/vircadia-world-meta/typescript/meta.ts";
 
 // Constants
 const TEST_NAME = "Vircadia World Realtime Benchmark";
 const TEST_PREFIX = "REALTIME_BENCHMARK_TEST_";
-const UPDATE_RATE = 20; // updates per second
-const TEST_DURATION = 60; // seconds
+const UPDATE_RATE = 60; // updates per second
+const TEST_DURATION = 10; // seconds
 
 // Utility functions
 function shuffleArray<T>(array: T[]): T[] {
@@ -34,7 +35,7 @@ async function createNode(
     worldId: string,
     name: string,
 ): Promise<string> {
-    const { data, error } = await client.from("nodes").insert({
+    const { data, error } = await client.from(World.E_Table.NODES).insert({
         vircadia_world_uuid: worldId,
         name: `${TEST_PREFIX}${name}`,
         translation: [
@@ -163,7 +164,9 @@ async function runVehicleTest(
 
         totalOperations += updates.length;
 
-        const { error } = await client.from("nodes").upsert(updates);
+        const { error } = await client.from(World.E_Table.NODES).upsert(
+            updates,
+        );
         if (error) {
             log({ message: `Error updating nodes: ${error}`, type: "error" });
         }
@@ -251,7 +254,9 @@ async function runPedestrianTest(
 
         totalOperations += updates.length;
 
-        const { error } = await client.from("nodes").upsert(updates);
+        const { error } = await client.from(World.E_Table.NODES).upsert(
+            updates,
+        );
         if (error) {
             log({ message: `Error updating nodes: ${error}`, type: "error" });
         }
@@ -330,7 +335,9 @@ async function runEnvironmentTest(
 
         totalOperations += updates.length;
 
-        const { error } = await client.from("nodes").upsert(updates);
+        const { error } = await client.from(World.E_Table.NODES).upsert(
+            updates,
+        );
         if (error) {
             log({ message: `Error updating nodes: ${error}`, type: "error" });
         }
@@ -364,15 +371,18 @@ async function runEnvironmentTest(
     };
 }
 
-async function runHolisticTest(
+async function runParallelTest(
     client: SupabaseTypes.SupabaseClient,
     worldId: string,
 ): Promise<TestResults> {
-    log({ message: "Running Holistic Test...", type: "info" });
+    log({ message: "Running Parallel Test...", type: "info" });
 
-    const vehicleResults = await runVehicleTest(client, worldId);
-    const pedestrianResults = await runPedestrianTest(client, worldId);
-    const environmentResults = await runEnvironmentTest(client, worldId);
+    const [vehicleResults, pedestrianResults, environmentResults] =
+        await Promise.all([
+            runVehicleTest(client, worldId),
+            runPedestrianTest(client, worldId),
+            runEnvironmentTest(client, worldId),
+        ]);
 
     const totalOperations = vehicleResults.totalOperations +
         pedestrianResults.totalOperations + environmentResults.totalOperations;
@@ -438,20 +448,45 @@ function printResults(
     vehicleResults: TestResults,
     pedestrianResults: TestResults,
     environmentResults: TestResults,
-    holisticResults: TestResults,
+    parallelResults: TestResults,
 ): void {
     log({
-        message: "\n${TEST_NAME} Results:",
-        type: "info",
+        message: `\n----------\n----------\n----------\n----------`,
+        type: "success",
     });
-    log({ message: "\nVehicle Test Results:", type: "info" });
+    log({
+        message: "\n${TEST_NAME} Results:",
+        type: "success",
+    });
+    log({ message: "\nVehicle Test Results:", type: "success" });
     analyzeResults(vehicleResults);
-    log({ message: "\nPedestrian Test Results:", type: "info" });
+    log({ message: "\nPedestrian Test Results:", type: "success" });
     analyzeResults(pedestrianResults);
-    log({ message: "\nEnvironment Test Results:", type: "info" });
+    log({ message: "\nEnvironment Test Results:", type: "success" });
     analyzeResults(environmentResults);
-    log({ message: "\nHolistic Test Results:", type: "info" });
-    analyzeResults(holisticResults);
+    log({ message: "\nParallel Test Results:", type: "success" });
+    analyzeResults(parallelResults);
+}
+
+// Cleanup function
+async function cleanupTestData(
+    client: SupabaseTypes.SupabaseClient,
+): Promise<void> {
+    log({ message: "Cleaning up test data...", type: "info" });
+
+    // Delete all nodes with names starting with TEST_PREFIX
+    await client.from(World.E_Table.NODES).delete().like(
+        "name",
+        `${TEST_PREFIX}%`,
+    );
+
+    // Delete all worlds with names starting with TEST_PREFIX
+    await client.from(World.E_Table.WORLD_GLTF).delete().like(
+        "name",
+        `${TEST_PREFIX}%`,
+    );
+
+    log({ message: "Cleanup completed", type: "success" });
 }
 
 // Main benchmark function
@@ -459,7 +494,7 @@ async function runBenchmark(
     client: SupabaseTypes.SupabaseClient,
 ): Promise<void> {
     const { data: worldData, error: worldError } = await client.from(
-        "world_gltf",
+        World.E_Table.WORLD_GLTF,
     ).insert({
         name: `${TEST_PREFIX}World`,
         version: "1.0.0",
@@ -476,20 +511,14 @@ async function runBenchmark(
     const vehicleResults = await runVehicleTest(client, worldId);
     const pedestrianResults = await runPedestrianTest(client, worldId);
     const environmentResults = await runEnvironmentTest(client, worldId);
-    const holisticResults = await runHolisticTest(client, worldId);
+    const parallelResults = await runParallelTest(client, worldId);
 
     printResults(
         vehicleResults,
         pedestrianResults,
         environmentResults,
-        holisticResults,
+        parallelResults,
     );
-
-    // Clean up
-    log({ message: "Cleaning up test data...", type: "info" });
-    await client.from("nodes").delete().like("name", `${TEST_PREFIX}%`);
-    await client.from("world_gltf").delete().eq("vircadia_uuid", worldId);
-    log({ message: "Cleanup completed", type: "success" });
 }
 
 // Main test function
@@ -545,11 +574,16 @@ Deno.test(TEST_NAME, async () => {
     log({ message: "Signed in as test user successfully", type: "success" });
 
     try {
+        // Clean up any existing test data before starting
+        await cleanupTestData(client);
+
+        // Run the benchmark
         await runBenchmark(client);
     } catch (error) {
         log({ message: `Test failed: ${error.message}`, type: "error" });
     } finally {
-        // Clean up resources
+        // Clean up resources and test data
+        await cleanupTestData(client);
         log({ message: "Cleaning up resources...", type: "info" });
         await client.auth.signOut();
         log({
