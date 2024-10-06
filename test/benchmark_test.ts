@@ -5,10 +5,16 @@ import { Supabase } from "../modules/supabase/supabase_manager.ts";
 import { World } from "../modules/vircadia-world-meta/typescript/meta.ts";
 
 // Constants
-const TEST_NAME = "Vircadia World Realtime Benchmark";
+const TEST_NAME = "Vircadia World Realtime Database Benchmark";
 const TEST_PREFIX = "REALTIME_BENCHMARK_TEST_";
 const UPDATE_RATE = 60; // updates per second
 const TEST_DURATION = 10; // seconds
+
+const NUM_VEHICLES = 20;
+const PLAYERS_PER_VEHICLE = 2;
+const NUM_PEDESTRIANS = 400;
+const ITEMS_PER_PEDESTRIAN = 5;
+const NUM_ENVIRONMENT_OBJECTS = 2000;
 
 // Utility functions
 function shuffleArray<T>(array: T[]): T[] {
@@ -51,18 +57,52 @@ async function createNode(
     return data.vircadia_uuid;
 }
 
+// Add this new function to create initial metadata for a node
+async function createInitialNodeMetadata(
+    client: SupabaseTypes.SupabaseClient,
+    nodeId: string,
+    objectType: string,
+): Promise<void> {
+    switch (objectType) {
+        case "vehicle":
+            await client.rpc(World.E_Table_Mutation.CREATE_NODE_METADATA, {
+                p_node_id: nodeId,
+                p_key: "wheel_rotations",
+                p_values_numeric: [0, 0, 0, 0],
+            });
+            break;
+        case "pedestrian":
+            await client.rpc(World.E_Table_Mutation.CREATE_NODE_METADATA, {
+                p_node_id: nodeId,
+                p_key: "joint_rotations",
+                p_values_numeric: new Array(20).fill(0), // Assuming 20 joints
+            });
+            break;
+        case "environment":
+            if (Math.random() > 0.5) {
+                await client.rpc(World.E_Table_Mutation.CREATE_NODE_METADATA, {
+                    p_node_id: nodeId,
+                    p_key: "interactive_state",
+                    p_values_numeric: [0],
+                });
+            }
+            break;
+    }
+}
+
 async function createVehicle(
     client: SupabaseTypes.SupabaseClient,
     worldId: string,
     index: number,
 ): Promise<string> {
     const nodeId = await createNode(client, worldId, `vehicle_${index}`);
-    await client.rpc("create_node_metadata", {
+    await createInitialNodeMetadata(client, nodeId, "vehicle");
+    await client.rpc(World.E_Table_Mutation.CREATE_NODE_METADATA, {
         p_node_id: nodeId,
         p_key: "object_type",
         p_value_text: "vehicle",
     });
-    await client.rpc("create_node_metadata", {
+    await client.rpc(World.E_Table_Mutation.CREATE_NODE_METADATA, {
         p_node_id: nodeId,
         p_key: "max_speed",
         p_value_numeric: 100 + Math.random() * 50,
@@ -76,12 +116,13 @@ async function createPedestrian(
     index: number,
 ): Promise<string> {
     const nodeId = await createNode(client, worldId, `pedestrian_${index}`);
-    await client.rpc("create_node_metadata", {
+    await createInitialNodeMetadata(client, nodeId, "pedestrian");
+    await client.rpc(World.E_Table_Mutation.CREATE_NODE_METADATA, {
         p_node_id: nodeId,
         p_key: "object_type",
         p_value_text: "pedestrian",
     });
-    await client.rpc("create_node_metadata", {
+    await client.rpc(World.E_Table_Mutation.CREATE_NODE_METADATA, {
         p_node_id: nodeId,
         p_key: "walking_speed",
         p_value_numeric: 3 + Math.random() * 2,
@@ -95,12 +136,13 @@ async function createEnvironmentObject(
     index: number,
 ): Promise<string> {
     const nodeId = await createNode(client, worldId, `env_object_${index}`);
-    await client.rpc("create_node_metadata", {
+    await createInitialNodeMetadata(client, nodeId, "environment");
+    await client.rpc(World.E_Table_Mutation.CREATE_NODE_METADATA, {
         p_node_id: nodeId,
         p_key: "object_type",
         p_value_text: "environment",
     });
-    await client.rpc("create_node_metadata", {
+    await client.rpc(World.E_Table_Mutation.CREATE_NODE_METADATA, {
         p_node_id: nodeId,
         p_key: "interactive",
         p_value_boolean: Math.random() > 0.5,
@@ -114,8 +156,6 @@ async function runVehicleTest(
     worldId: string,
 ): Promise<TestResults> {
     log({ message: "Running Vehicle Test...", type: "info" });
-    const NUM_VEHICLES = 20;
-    const PLAYERS_PER_VEHICLE = 2;
     const vehicles: string[] = [];
     const players: string[] = [];
 
@@ -162,14 +202,25 @@ async function runVehicleTest(
             rotation: [Math.random(), Math.random(), Math.random(), 1],
         })));
 
-        totalOperations += updates.length;
+        const metadataUpdates = vehicles.map((vehicleId) => ({
+            p_node_id: vehicleId,
+            p_key: "wheel_rotations",
+            p_values_numeric: [
+                Math.random(),
+                Math.random(),
+                Math.random(),
+                Math.random(),
+            ],
+        }));
 
-        const { error } = await client.from(World.E_Table.NODES).upsert(
-            updates,
-        );
-        if (error) {
-            log({ message: `Error updating nodes: ${error}`, type: "error" });
-        }
+        totalOperations += updates.length + metadataUpdates.length;
+
+        await Promise.all([
+            client.from(World.E_Table.NODES).upsert(updates),
+            ...metadataUpdates.map((update) =>
+                client.rpc(World.E_Table_Mutation.UPDATE_NODE_METADATA, update)
+            ),
+        ]);
 
         const updateEndTime = performance.now();
         latencies.push(updateEndTime - updateStartTime);
@@ -205,8 +256,6 @@ async function runPedestrianTest(
     worldId: string,
 ): Promise<TestResults> {
     log({ message: "Running Pedestrian Test...", type: "info" });
-    const NUM_PEDESTRIANS = 400;
-    const ITEMS_PER_PEDESTRIAN = 5;
     const pedestrians: string[] = [];
     const items: string[] = [];
 
@@ -252,14 +301,20 @@ async function runPedestrianTest(
             rotation: [Math.random(), Math.random(), Math.random(), 1],
         })));
 
-        totalOperations += updates.length;
+        const metadataUpdates = pedestrians.map((pedestrianId) => ({
+            p_node_id: pedestrianId,
+            p_key: "joint_rotations",
+            p_values_numeric: new Array(20).fill(0).map(() => Math.random()),
+        }));
 
-        const { error } = await client.from(World.E_Table.NODES).upsert(
-            updates,
-        );
-        if (error) {
-            log({ message: `Error updating nodes: ${error}`, type: "error" });
-        }
+        totalOperations += updates.length + metadataUpdates.length;
+
+        await Promise.all([
+            client.from(World.E_Table.NODES).upsert(updates),
+            ...metadataUpdates.map((update) =>
+                client.rpc(World.E_Table_Mutation.UPDATE_NODE_METADATA, update)
+            ),
+        ]);
 
         const updateEndTime = performance.now();
         latencies.push(updateEndTime - updateStartTime);
@@ -295,7 +350,6 @@ async function runEnvironmentTest(
     worldId: string,
 ): Promise<TestResults> {
     log({ message: "Running Environment Test...", type: "info" });
-    const NUM_ENVIRONMENT_OBJECTS = 2000;
     const environmentObjects: string[] = [];
 
     // Create environment objects
@@ -333,14 +387,20 @@ async function runEnvironmentTest(
             rotation: [Math.random(), Math.random(), Math.random(), 1],
         }));
 
-        totalOperations += updates.length;
+        const metadataUpdates = objectsToUpdate.map((objectId) => ({
+            p_node_id: objectId,
+            p_key: "interactive_state",
+            p_values_numeric: [Math.random()],
+        }));
 
-        const { error } = await client.from(World.E_Table.NODES).upsert(
-            updates,
-        );
-        if (error) {
-            log({ message: `Error updating nodes: ${error}`, type: "error" });
-        }
+        totalOperations += updates.length + metadataUpdates.length;
+
+        await Promise.all([
+            client.from(World.E_Table.NODES).upsert(updates),
+            ...metadataUpdates.map((update) =>
+                client.rpc(World.E_Table_Mutation.UPDATE_NODE_METADATA, update)
+            ),
+        ]);
 
         const updateEndTime = performance.now();
         latencies.push(updateEndTime - updateStartTime);
@@ -455,7 +515,7 @@ function printResults(
         type: "success",
     });
     log({
-        message: "\n${TEST_NAME} Results:",
+        message: `\n${TEST_NAME} Results:`,
         type: "success",
     });
     log({ message: "\nVehicle Test Results:", type: "success" });
@@ -528,31 +588,53 @@ Deno.test(TEST_NAME, async () => {
         type: "info",
     });
 
-    // Initialize Supabase
-    log({ message: "Initializing Supabase...", type: "info" });
-    const supabase = Supabase.getInstance(true); // Enable debug mode
-    await supabase.initializeAndStart({ forceRestart: false });
-    log({ message: "Supabase initialized successfully", type: "success" });
+    let testDatabaseHost: string | null = Deno.env.get("TEST_DATABASE_HOST") ??
+        null;
+    let testDatabasePort: number | null = Deno.env.get("TEST_DATABASE_PORT")
+        ? parseInt(Deno.env.get("TEST_DATABASE_PORT")!)
+        : null;
+    let testDatabaseKey: string | null = Deno.env.get("TEST_DATABASE_KEY") ??
+        null;
+    const testUserEmail = Deno.env.get("TEST_USER_EMAIL");
+    const testUserPassword = Deno.env.get("TEST_USER_PASSWORD");
 
-    // Get Supabase status
-    log({ message: "Getting Supabase status...", type: "info" });
-    const status = await supabase.getStatus();
-    log({
-        message: `Supabase status: ${JSON.stringify(status)}`,
-        type: "info",
-    });
+    if (!testDatabaseHost || !testDatabasePort || !testDatabaseKey) {
+        // Initialize Supabase Manager
+        log({
+            message:
+                `Missing test database credentials, host: [${testDatabaseHost}], port: [${testDatabasePort}], key: [${testDatabaseKey}]`,
+            type: "warning",
+        });
+        log({
+            message: "Initializing Supabase Manager...",
+            type: "info",
+        });
+        const supabase = Supabase.getInstance(true); // Enable debug mode
+        await supabase.initializeAndStart({ forceRestart: false });
+        log({ message: "Supabase initialized successfully", type: "success" });
+
+        // Get Supabase status
+        log({ message: "Getting Supabase status...", type: "info" });
+        const status = await supabase.getStatus();
+        log({
+            message: `Supabase status: ${JSON.stringify(status)}`,
+            type: "info",
+        });
+        testDatabaseHost = status.api.host;
+        testDatabasePort = status.api.port;
+        testDatabaseKey = status.anonKey;
+    }
 
     // Create Supabase client
     log({ message: "Creating Supabase client...", type: "info" });
-    const supabaseUrl = `http://${status.api.host}:${status.api.port}`;
-    const supabaseKey = status.anonKey || "";
+
+    const supabaseUrl = `http://${testDatabaseHost}:${testDatabasePort}`;
+    const supabaseKey = testDatabaseKey || "";
     const client = createClient(supabaseUrl, supabaseKey);
     log({ message: "Supabase client created successfully", type: "success" });
 
     // Sign in with the test user
     log({ message: "Signing in with test user...", type: "info" });
-    const testUserEmail = Deno.env.get("TEST_USER_EMAIL");
-    const testUserPassword = Deno.env.get("TEST_USER_PASSWORD");
     if (!testUserEmail || !testUserPassword) {
         log({
             message:
