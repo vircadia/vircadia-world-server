@@ -59,9 +59,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Scenes Metadata
+-- World GLTF Scenes Metadata
 
-CREATE OR REPLACE FUNCTION create_scene_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_scene_metadata(
   p_scene_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -74,17 +74,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create scene metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_scene metadata entries';
   END IF;
 
-  INSERT INTO scenes_metadata (scene_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_scenes_metadata (scene_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_scene_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_scene_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_scene_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -95,10 +95,10 @@ CREATE OR REPLACE FUNCTION update_scene_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update scene metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_scene metadata entries';
   END IF;
 
-  UPDATE scenes_metadata
+  UPDATE world_gltf_scenes_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -109,20 +109,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_scene_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_scene_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete scene metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_scene metadata entries';
   END IF;
 
-  DELETE FROM scenes_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_scenes_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Nodes Metadata
+-- World GLTF Nodes Metadata
 
-CREATE OR REPLACE FUNCTION create_node_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_node_metadata(
   p_node_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -135,17 +135,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create node metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_node metadata entries';
   END IF;
 
-  INSERT INTO nodes_metadata (node_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_nodes_metadata (node_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_node_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_node_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_node_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -156,10 +156,10 @@ CREATE OR REPLACE FUNCTION update_node_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update node metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_node metadata entries';
   END IF;
 
-  UPDATE nodes_metadata
+  UPDATE world_gltf_nodes_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -170,20 +170,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_node_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_node_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete node metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_node metadata entries';
   END IF;
 
-  DELETE FROM nodes_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_nodes_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Meshes Metadata
+-- World GLTF Meshes Metadata
 
-CREATE OR REPLACE FUNCTION create_mesh_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_mesh_metadata(
   p_mesh_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -196,17 +196,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create mesh metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_mesh metadata entries';
   END IF;
 
-  INSERT INTO meshes_metadata (mesh_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_meshes_metadata (mesh_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_mesh_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_mesh_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_mesh_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -217,10 +217,10 @@ CREATE OR REPLACE FUNCTION update_mesh_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update mesh metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_mesh metadata entries';
   END IF;
 
-  UPDATE meshes_metadata
+  UPDATE world_gltf_meshes_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -231,20 +231,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_mesh_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_mesh_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete mesh metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_mesh metadata entries';
   END IF;
 
-  DELETE FROM meshes_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_meshes_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Materials Metadata
+-- World GLTF Materials Metadata
 
-CREATE OR REPLACE FUNCTION create_material_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_material_metadata(
   p_material_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -257,17 +257,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create material metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_material metadata entries';
   END IF;
 
-  INSERT INTO materials_metadata (material_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_materials_metadata (material_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_material_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_material_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_material_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -278,10 +278,10 @@ CREATE OR REPLACE FUNCTION update_material_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update material metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_material metadata entries';
   END IF;
 
-  UPDATE materials_metadata
+  UPDATE world_gltf_materials_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -292,20 +292,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_material_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_material_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete material metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_material metadata entries';
   END IF;
 
-  DELETE FROM materials_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_materials_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Textures Metadata
+-- World GLTF Textures Metadata
 
-CREATE OR REPLACE FUNCTION create_texture_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_texture_metadata(
   p_texture_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -318,17 +318,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create texture metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_texture metadata entries';
   END IF;
 
-  INSERT INTO textures_metadata (texture_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_textures_metadata (texture_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_texture_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_texture_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_texture_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -339,10 +339,10 @@ CREATE OR REPLACE FUNCTION update_texture_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update texture metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_texture metadata entries';
   END IF;
 
-  UPDATE textures_metadata
+  UPDATE world_gltf_textures_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -353,20 +353,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_texture_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_texture_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete texture metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_texture metadata entries';
   END IF;
 
-  DELETE FROM textures_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_textures_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Images Metadata
+-- World GLTF Images Metadata
 
-CREATE OR REPLACE FUNCTION create_image_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_image_metadata(
   p_image_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -379,17 +379,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create image metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_image metadata entries';
   END IF;
 
-  INSERT INTO images_metadata (image_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_images_metadata (image_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_image_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_image_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_image_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -400,10 +400,10 @@ CREATE OR REPLACE FUNCTION update_image_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update image metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_image metadata entries';
   END IF;
 
-  UPDATE images_metadata
+  UPDATE world_gltf_images_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -414,20 +414,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_image_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_image_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete image metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_image metadata entries';
   END IF;
 
-  DELETE FROM images_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_images_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Samplers Metadata
+-- World GLTF Samplers Metadata
 
-CREATE OR REPLACE FUNCTION create_sampler_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_sampler_metadata(
   p_sampler_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -440,17 +440,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create sampler metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_sampler metadata entries';
   END IF;
 
-  INSERT INTO samplers_metadata (sampler_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_samplers_metadata (sampler_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_sampler_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_sampler_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_sampler_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -461,10 +461,10 @@ CREATE OR REPLACE FUNCTION update_sampler_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update sampler metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_sampler metadata entries';
   END IF;
 
-  UPDATE samplers_metadata
+  UPDATE world_gltf_samplers_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -475,20 +475,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_sampler_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_sampler_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete sampler metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_sampler metadata entries';
   END IF;
 
-  DELETE FROM samplers_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_samplers_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Buffers Metadata
+-- World GLTF Buffers Metadata
 
-CREATE OR REPLACE FUNCTION create_buffer_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_buffer_metadata(
   p_buffer_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -501,17 +501,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create buffer metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_buffer metadata entries';
   END IF;
 
-  INSERT INTO buffers_metadata (buffer_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_buffers_metadata (buffer_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_buffer_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_buffer_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_buffer_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -522,10 +522,10 @@ CREATE OR REPLACE FUNCTION update_buffer_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update buffer metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_buffer metadata entries';
   END IF;
 
-  UPDATE buffers_metadata
+  UPDATE world_gltf_buffers_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -536,20 +536,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_buffer_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_buffer_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete buffer metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_buffer metadata entries';
   END IF;
 
-  DELETE FROM buffers_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_buffers_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Buffer Views Metadata
+-- World GLTF Buffer Views Metadata
 
-CREATE OR REPLACE FUNCTION create_buffer_view_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_buffer_view_metadata(
   p_buffer_view_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -562,17 +562,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create buffer view metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_buffer_view metadata entries';
   END IF;
 
-  INSERT INTO buffer_views_metadata (buffer_view_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_buffer_views_metadata (buffer_view_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_buffer_view_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_buffer_view_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_buffer_view_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -583,10 +583,10 @@ CREATE OR REPLACE FUNCTION update_buffer_view_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update buffer view metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_buffer_view metadata entries';
   END IF;
 
-  UPDATE buffer_views_metadata
+  UPDATE world_gltf_buffer_views_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -597,20 +597,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_buffer_view_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_buffer_view_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete buffer view metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_buffer_view metadata entries';
   END IF;
 
-  DELETE FROM buffer_views_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_buffer_views_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Accessors Metadata
+-- World GLTF Accessors Metadata
 
-CREATE OR REPLACE FUNCTION create_accessor_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_accessor_metadata(
   p_accessor_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -623,17 +623,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create accessor metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_accessor metadata entries';
   END IF;
 
-  INSERT INTO accessors_metadata (accessor_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_accessors_metadata (accessor_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_accessor_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_accessor_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_accessor_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -644,10 +644,10 @@ CREATE OR REPLACE FUNCTION update_accessor_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update accessor metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_accessor metadata entries';
   END IF;
 
-  UPDATE accessors_metadata
+  UPDATE world_gltf_accessors_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -658,20 +658,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_accessor_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_accessor_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete accessor metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_accessor metadata entries';
   END IF;
 
-  DELETE FROM accessors_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_accessors_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Animations Metadata
+-- World GLTF Animations Metadata
 
-CREATE OR REPLACE FUNCTION create_animation_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_animation_metadata(
   p_animation_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -684,17 +684,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create animation metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_animation metadata entries';
   END IF;
 
-  INSERT INTO animations_metadata (animation_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_animations_metadata (animation_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_animation_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_animation_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_animation_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -705,10 +705,10 @@ CREATE OR REPLACE FUNCTION update_animation_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update animation metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_animation metadata entries';
   END IF;
 
-  UPDATE animations_metadata
+  UPDATE world_gltf_animations_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -719,20 +719,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_animation_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_animation_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete animation metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_animation metadata entries';
   END IF;
 
-  DELETE FROM animations_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_animations_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Skins Metadata
+-- World GLTF Skins Metadata
 
-CREATE OR REPLACE FUNCTION create_skin_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_skin_metadata(
   p_skin_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -745,17 +745,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create skin metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_skin metadata entries';
   END IF;
 
-  INSERT INTO skins_metadata (skin_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_skins_metadata (skin_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_skin_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_skin_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_skin_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -766,10 +766,10 @@ CREATE OR REPLACE FUNCTION update_skin_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update skin metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_skin metadata entries';
   END IF;
 
-  UPDATE skins_metadata
+  UPDATE world_gltf_skins_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -780,20 +780,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_skin_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_skin_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete skin metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_skin metadata entries';
   END IF;
 
-  DELETE FROM skins_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_skins_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Cameras Metadata
+-- World GLTF Cameras Metadata
 
-CREATE OR REPLACE FUNCTION create_camera_metadata(
+CREATE OR REPLACE FUNCTION create_world_gltf_camera_metadata(
   p_camera_id UUID,
   p_key TEXT,
   p_values_text TEXT[] DEFAULT NULL,
@@ -806,17 +806,17 @@ DECLARE
   new_id UUID;
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can create camera metadata entries';
+    RAISE EXCEPTION 'Only admins can create world_gltf_camera metadata entries';
   END IF;
 
-  INSERT INTO cameras_metadata (camera_id, key, values_text, values_numeric, values_boolean, values_timestamp)
+  INSERT INTO world_gltf_cameras_metadata (camera_id, key, values_text, values_numeric, values_boolean, values_timestamp)
   VALUES (p_camera_id, p_key, p_values_text, p_values_numeric, p_values_boolean, p_values_timestamp)
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_camera_metadata(
+CREATE OR REPLACE FUNCTION update_world_gltf_camera_metadata(
   p_metadata_id UUID,
   p_key TEXT DEFAULT NULL,
   p_values_text TEXT[] DEFAULT NULL,
@@ -827,10 +827,10 @@ CREATE OR REPLACE FUNCTION update_camera_metadata(
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can update camera metadata entries';
+    RAISE EXCEPTION 'Only admins can update world_gltf_camera metadata entries';
   END IF;
 
-  UPDATE cameras_metadata
+  UPDATE world_gltf_cameras_metadata
   SET 
     key = COALESCE(p_key, key),
     values_text = COALESCE(p_values_text, values_text),
@@ -841,14 +841,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_camera_metadata(p_metadata_id UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_camera_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Only admins can delete camera metadata entries';
+    RAISE EXCEPTION 'Only admins can delete world_gltf_camera metadata entries';
   END IF;
 
-  DELETE FROM cameras_metadata WHERE metadata_id = p_metadata_id;
+  DELETE FROM world_gltf_cameras_metadata WHERE metadata_id = p_metadata_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -873,275 +873,275 @@ CREATE POLICY world_gltf_metadata_delete_policy ON world_gltf_metadata
     EXISTS (SELECT 1 FROM world_gltf WHERE world_gltf.vircadia_uuid = world_gltf_metadata.world_gltf_id AND is_admin())
   );
 
--- Scenes Metadata RLS
-CREATE POLICY scenes_metadata_select_policy ON scenes_metadata 
+-- World GLTF Scenes Metadata RLS
+CREATE POLICY world_gltf_scenes_metadata_select_policy ON world_gltf_scenes_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM scenes WHERE scenes.vircadia_uuid = scenes_metadata.scene_id)
+    EXISTS (SELECT 1 FROM world_gltf_scenes WHERE world_gltf_scenes.vircadia_uuid = world_gltf_scenes_metadata.scene_id)
   );
 
-CREATE POLICY scenes_metadata_insert_policy ON scenes_metadata 
+CREATE POLICY world_gltf_scenes_metadata_insert_policy ON world_gltf_scenes_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM scenes WHERE scenes.vircadia_uuid = scenes_metadata.scene_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_scenes WHERE world_gltf_scenes.vircadia_uuid = world_gltf_scenes_metadata.scene_id AND is_admin())
   );
 
-CREATE POLICY scenes_metadata_update_policy ON scenes_metadata 
+CREATE POLICY world_gltf_scenes_metadata_update_policy ON world_gltf_scenes_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM scenes WHERE scenes.vircadia_uuid = scenes_metadata.scene_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_scenes WHERE world_gltf_scenes.vircadia_uuid = world_gltf_scenes_metadata.scene_id AND is_admin())
   );
 
-CREATE POLICY scenes_metadata_delete_policy ON scenes_metadata 
+CREATE POLICY world_gltf_scenes_metadata_delete_policy ON world_gltf_scenes_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM scenes WHERE scenes.vircadia_uuid = scenes_metadata.scene_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_scenes WHERE world_gltf_scenes.vircadia_uuid = world_gltf_scenes_metadata.scene_id AND is_admin())
   );
 
--- Nodes Metadata RLS
-CREATE POLICY nodes_metadata_select_policy ON nodes_metadata 
+-- World GLTF Nodes Metadata RLS
+CREATE POLICY world_gltf_nodes_metadata_select_policy ON world_gltf_nodes_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM nodes WHERE nodes.vircadia_uuid = nodes_metadata.node_id)
+    EXISTS (SELECT 1 FROM world_gltf_nodes WHERE world_gltf_nodes.vircadia_uuid = world_gltf_nodes_metadata.node_id)
   );
 
-CREATE POLICY nodes_metadata_insert_policy ON nodes_metadata 
+CREATE POLICY world_gltf_nodes_metadata_insert_policy ON world_gltf_nodes_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM nodes WHERE nodes.vircadia_uuid = nodes_metadata.node_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_nodes WHERE world_gltf_nodes.vircadia_uuid = world_gltf_nodes_metadata.node_id AND is_admin())
   );
 
-CREATE POLICY nodes_metadata_update_policy ON nodes_metadata 
+CREATE POLICY world_gltf_nodes_metadata_update_policy ON world_gltf_nodes_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM nodes WHERE nodes.vircadia_uuid = nodes_metadata.node_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_nodes WHERE world_gltf_nodes.vircadia_uuid = world_gltf_nodes_metadata.node_id AND is_admin())
   );
 
-CREATE POLICY nodes_metadata_delete_policy ON nodes_metadata 
+CREATE POLICY world_gltf_nodes_metadata_delete_policy ON world_gltf_nodes_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM nodes WHERE nodes.vircadia_uuid = nodes_metadata.node_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_nodes WHERE world_gltf_nodes.vircadia_uuid = world_gltf_nodes_metadata.node_id AND is_admin())
   );
 
--- Meshes Metadata RLS
-CREATE POLICY meshes_metadata_select_policy ON meshes_metadata 
+-- World GLTF Meshes Metadata RLS
+CREATE POLICY world_gltf_meshes_metadata_select_policy ON world_gltf_meshes_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM meshes WHERE meshes.vircadia_uuid = meshes_metadata.mesh_id)
+    EXISTS (SELECT 1 FROM world_gltf_meshes WHERE world_gltf_meshes.vircadia_uuid = world_gltf_meshes_metadata.mesh_id)
   );
 
-CREATE POLICY meshes_metadata_insert_policy ON meshes_metadata 
+CREATE POLICY world_gltf_meshes_metadata_insert_policy ON world_gltf_meshes_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM meshes WHERE meshes.vircadia_uuid = meshes_metadata.mesh_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_meshes WHERE world_gltf_meshes.vircadia_uuid = world_gltf_meshes_metadata.mesh_id AND is_admin())
   );
 
-CREATE POLICY meshes_metadata_update_policy ON meshes_metadata 
+CREATE POLICY world_gltf_meshes_metadata_update_policy ON world_gltf_meshes_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM meshes WHERE meshes.vircadia_uuid = meshes_metadata.mesh_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_meshes WHERE world_gltf_meshes.vircadia_uuid = world_gltf_meshes_metadata.mesh_id AND is_admin())
   );
 
-CREATE POLICY meshes_metadata_delete_policy ON meshes_metadata 
+CREATE POLICY world_gltf_meshes_metadata_delete_policy ON world_gltf_meshes_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM meshes WHERE meshes.vircadia_uuid = meshes_metadata.mesh_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_meshes WHERE world_gltf_meshes.vircadia_uuid = world_gltf_meshes_metadata.mesh_id AND is_admin())
   );
 
--- Materials Metadata RLS
-CREATE POLICY materials_metadata_select_policy ON materials_metadata 
+-- World GLTF Materials Metadata RLS
+CREATE POLICY world_gltf_materials_metadata_select_policy ON world_gltf_materials_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM materials WHERE materials.vircadia_uuid = materials_metadata.material_id)
+    EXISTS (SELECT 1 FROM world_gltf_materials WHERE world_gltf_materials.vircadia_uuid = world_gltf_materials_metadata.material_id)
   );
 
-CREATE POLICY materials_metadata_insert_policy ON materials_metadata 
+CREATE POLICY world_gltf_materials_metadata_insert_policy ON world_gltf_materials_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM materials WHERE materials.vircadia_uuid = materials_metadata.material_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_materials WHERE world_gltf_materials.vircadia_uuid = world_gltf_materials_metadata.material_id AND is_admin())
   );
 
-CREATE POLICY materials_metadata_update_policy ON materials_metadata 
+CREATE POLICY world_gltf_materials_metadata_update_policy ON world_gltf_materials_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM materials WHERE materials.vircadia_uuid = materials_metadata.material_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_materials WHERE world_gltf_materials.vircadia_uuid = world_gltf_materials_metadata.material_id AND is_admin())
   );
 
-CREATE POLICY materials_metadata_delete_policy ON materials_metadata 
+CREATE POLICY world_gltf_materials_metadata_delete_policy ON world_gltf_materials_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM materials WHERE materials.vircadia_uuid = materials_metadata.material_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_materials WHERE world_gltf_materials.vircadia_uuid = world_gltf_materials_metadata.material_id AND is_admin())
   );
 
--- Textures Metadata RLS
-CREATE POLICY textures_metadata_select_policy ON textures_metadata 
+-- World GLTF Textures Metadata RLS
+CREATE POLICY world_gltf_textures_metadata_select_policy ON world_gltf_textures_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM textures WHERE textures.vircadia_uuid = textures_metadata.texture_id)
+    EXISTS (SELECT 1 FROM world_gltf_textures WHERE world_gltf_textures.vircadia_uuid = world_gltf_textures_metadata.texture_id)
   );
 
-CREATE POLICY textures_metadata_insert_policy ON textures_metadata 
+CREATE POLICY world_gltf_textures_metadata_insert_policy ON world_gltf_textures_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM textures WHERE textures.vircadia_uuid = textures_metadata.texture_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_textures WHERE world_gltf_textures.vircadia_uuid = world_gltf_textures_metadata.texture_id AND is_admin())
   );
 
-CREATE POLICY textures_metadata_update_policy ON textures_metadata 
+CREATE POLICY world_gltf_textures_metadata_update_policy ON world_gltf_textures_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM textures WHERE textures.vircadia_uuid = textures_metadata.texture_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_textures WHERE world_gltf_textures.vircadia_uuid = world_gltf_textures_metadata.texture_id AND is_admin())
   );
 
-CREATE POLICY textures_metadata_delete_policy ON textures_metadata 
+CREATE POLICY world_gltf_textures_metadata_delete_policy ON world_gltf_textures_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM textures WHERE textures.vircadia_uuid = textures_metadata.texture_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_textures WHERE world_gltf_textures.vircadia_uuid = world_gltf_textures_metadata.texture_id AND is_admin())
   );
 
--- Images Metadata RLS
-CREATE POLICY images_metadata_select_policy ON images_metadata 
+-- World GLTF Images Metadata RLS
+CREATE POLICY world_gltf_images_metadata_select_policy ON world_gltf_images_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM images WHERE images.vircadia_uuid = images_metadata.image_id)
+    EXISTS (SELECT 1 FROM world_gltf_images WHERE world_gltf_images.vircadia_uuid = world_gltf_images_metadata.image_id)
   );
 
-CREATE POLICY images_metadata_insert_policy ON images_metadata 
+CREATE POLICY world_gltf_images_metadata_insert_policy ON world_gltf_images_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM images WHERE images.vircadia_uuid = images_metadata.image_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_images WHERE world_gltf_images.vircadia_uuid = world_gltf_images_metadata.image_id AND is_admin())
   );
 
-CREATE POLICY images_metadata_update_policy ON images_metadata 
+CREATE POLICY world_gltf_images_metadata_update_policy ON world_gltf_images_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM images WHERE images.vircadia_uuid = images_metadata.image_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_images WHERE world_gltf_images.vircadia_uuid = world_gltf_images_metadata.image_id AND is_admin())
   );
 
-CREATE POLICY images_metadata_delete_policy ON images_metadata 
+CREATE POLICY world_gltf_images_metadata_delete_policy ON world_gltf_images_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM images WHERE images.vircadia_uuid = images_metadata.image_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_images WHERE world_gltf_images.vircadia_uuid = world_gltf_images_metadata.image_id AND is_admin())
   );
 
--- Samplers Metadata RLS
-CREATE POLICY samplers_metadata_select_policy ON samplers_metadata 
+-- World GLTF Samplers Metadata RLS
+CREATE POLICY world_gltf_samplers_metadata_select_policy ON world_gltf_samplers_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM samplers WHERE samplers.vircadia_uuid = samplers_metadata.sampler_id)
+    EXISTS (SELECT 1 FROM world_gltf_samplers WHERE world_gltf_samplers.vircadia_uuid = world_gltf_samplers_metadata.sampler_id)
   );
 
-CREATE POLICY samplers_metadata_insert_policy ON samplers_metadata 
+CREATE POLICY world_gltf_samplers_metadata_insert_policy ON world_gltf_samplers_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM samplers WHERE samplers.vircadia_uuid = samplers_metadata.sampler_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_samplers WHERE world_gltf_samplers.vircadia_uuid = world_gltf_samplers_metadata.sampler_id AND is_admin())
   );
 
-CREATE POLICY samplers_metadata_update_policy ON samplers_metadata 
+CREATE POLICY world_gltf_samplers_metadata_update_policy ON world_gltf_samplers_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM samplers WHERE samplers.vircadia_uuid = samplers_metadata.sampler_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_samplers WHERE world_gltf_samplers.vircadia_uuid = world_gltf_samplers_metadata.sampler_id AND is_admin())
   );
 
-CREATE POLICY samplers_metadata_delete_policy ON samplers_metadata 
+CREATE POLICY world_gltf_samplers_metadata_delete_policy ON world_gltf_samplers_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM samplers WHERE samplers.vircadia_uuid = samplers_metadata.sampler_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_samplers WHERE world_gltf_samplers.vircadia_uuid = world_gltf_samplers_metadata.sampler_id AND is_admin())
   );
 
--- Buffers Metadata RLS
-CREATE POLICY buffers_metadata_select_policy ON buffers_metadata 
+-- World GLTF Buffers Metadata RLS
+CREATE POLICY world_gltf_buffers_metadata_select_policy ON world_gltf_buffers_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM buffers WHERE buffers.vircadia_uuid = buffers_metadata.buffer_id)
+    EXISTS (SELECT 1 FROM world_gltf_buffers WHERE world_gltf_buffers.vircadia_uuid = world_gltf_buffers_metadata.buffer_id)
   );
 
-CREATE POLICY buffers_metadata_insert_policy ON buffers_metadata 
+CREATE POLICY world_gltf_buffers_metadata_insert_policy ON world_gltf_buffers_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM buffers WHERE buffers.vircadia_uuid = buffers_metadata.buffer_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_buffers WHERE world_gltf_buffers.vircadia_uuid = world_gltf_buffers_metadata.buffer_id AND is_admin())
   );
 
-CREATE POLICY buffers_metadata_update_policy ON buffers_metadata 
+CREATE POLICY world_gltf_buffers_metadata_update_policy ON world_gltf_buffers_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM buffers WHERE buffers.vircadia_uuid = buffers_metadata.buffer_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_buffers WHERE world_gltf_buffers.vircadia_uuid = world_gltf_buffers_metadata.buffer_id AND is_admin())
   );
 
-CREATE POLICY buffers_metadata_delete_policy ON buffers_metadata 
+CREATE POLICY world_gltf_buffers_metadata_delete_policy ON world_gltf_buffers_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM buffers WHERE buffers.vircadia_uuid = buffers_metadata.buffer_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_buffers WHERE world_gltf_buffers.vircadia_uuid = world_gltf_buffers_metadata.buffer_id AND is_admin())
   );
 
--- Buffer Views Metadata RLS
-CREATE POLICY buffer_views_metadata_select_policy ON buffer_views_metadata 
+-- World GLTF Buffer Views Metadata RLS
+CREATE POLICY world_gltf_buffer_views_metadata_select_policy ON world_gltf_buffer_views_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM buffer_views WHERE buffer_views.vircadia_uuid = buffer_views_metadata.buffer_view_id)
+    EXISTS (SELECT 1 FROM world_gltf_buffer_views WHERE world_gltf_buffer_views.vircadia_uuid = world_gltf_buffer_views_metadata.buffer_view_id)
   );
 
-CREATE POLICY buffer_views_metadata_insert_policy ON buffer_views_metadata 
+CREATE POLICY world_gltf_buffer_views_metadata_insert_policy ON world_gltf_buffer_views_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM buffer_views WHERE buffer_views.vircadia_uuid = buffer_views_metadata.buffer_view_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_buffer_views WHERE world_gltf_buffer_views.vircadia_uuid = world_gltf_buffer_views_metadata.buffer_view_id AND is_admin())
   );
 
-CREATE POLICY buffer_views_metadata_update_policy ON buffer_views_metadata 
+CREATE POLICY world_gltf_buffer_views_metadata_update_policy ON world_gltf_buffer_views_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM buffer_views WHERE buffer_views.vircadia_uuid = buffer_views_metadata.buffer_view_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_buffer_views WHERE world_gltf_buffer_views.vircadia_uuid = world_gltf_buffer_views_metadata.buffer_view_id AND is_admin())
   );
 
-CREATE POLICY buffer_views_metadata_delete_policy ON buffer_views_metadata 
+CREATE POLICY world_gltf_buffer_views_metadata_delete_policy ON world_gltf_buffer_views_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM buffer_views WHERE buffer_views.vircadia_uuid = buffer_views_metadata.buffer_view_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_buffer_views WHERE world_gltf_buffer_views.vircadia_uuid = world_gltf_buffer_views_metadata.buffer_view_id AND is_admin())
   );
 
--- Accessors Metadata RLS
-CREATE POLICY accessors_metadata_select_policy ON accessors_metadata 
+-- World GLTF Accessors Metadata RLS
+CREATE POLICY world_gltf_accessors_metadata_select_policy ON world_gltf_accessors_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM accessors WHERE accessors.vircadia_uuid = accessors_metadata.accessor_id)
+    EXISTS (SELECT 1 FROM world_gltf_accessors WHERE world_gltf_accessors.vircadia_uuid = world_gltf_accessors_metadata.accessor_id)
   );
 
-CREATE POLICY accessors_metadata_insert_policy ON accessors_metadata 
+CREATE POLICY world_gltf_accessors_metadata_insert_policy ON world_gltf_accessors_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM accessors WHERE accessors.vircadia_uuid = accessors_metadata.accessor_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_accessors WHERE world_gltf_accessors.vircadia_uuid = world_gltf_accessors_metadata.accessor_id AND is_admin())
   );
 
-CREATE POLICY accessors_metadata_update_policy ON accessors_metadata 
+CREATE POLICY world_gltf_accessors_metadata_update_policy ON world_gltf_accessors_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM accessors WHERE accessors.vircadia_uuid = accessors_metadata.accessor_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_accessors WHERE world_gltf_accessors.vircadia_uuid = world_gltf_accessors_metadata.accessor_id AND is_admin())
   );
 
-CREATE POLICY accessors_metadata_delete_policy ON accessors_metadata 
+CREATE POLICY world_gltf_accessors_metadata_delete_policy ON world_gltf_accessors_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM accessors WHERE accessors.vircadia_uuid = accessors_metadata.accessor_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_accessors WHERE world_gltf_accessors.vircadia_uuid = world_gltf_accessors_metadata.accessor_id AND is_admin())
   );
 
--- Animations Metadata RLS
-CREATE POLICY animations_metadata_select_policy ON animations_metadata 
+-- World GLTF Animations Metadata RLS
+CREATE POLICY world_gltf_animations_metadata_select_policy ON world_gltf_animations_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM animations WHERE animations.vircadia_uuid = animations_metadata.animation_id)
+    EXISTS (SELECT 1 FROM world_gltf_animations WHERE world_gltf_animations.vircadia_uuid = world_gltf_animations_metadata.animation_id)
   );
 
-CREATE POLICY animations_metadata_insert_policy ON animations_metadata 
+CREATE POLICY world_gltf_animations_metadata_insert_policy ON world_gltf_animations_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM animations WHERE animations.vircadia_uuid = animations_metadata.animation_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_animations WHERE world_gltf_animations.vircadia_uuid = world_gltf_animations_metadata.animation_id AND is_admin())
   );
 
-CREATE POLICY animations_metadata_update_policy ON animations_metadata 
+CREATE POLICY world_gltf_animations_metadata_update_policy ON world_gltf_animations_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM animations WHERE animations.vircadia_uuid = animations_metadata.animation_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_animations WHERE world_gltf_animations.vircadia_uuid = world_gltf_animations_metadata.animation_id AND is_admin())
   );
 
-CREATE POLICY animations_metadata_delete_policy ON animations_metadata 
+CREATE POLICY world_gltf_animations_metadata_delete_policy ON world_gltf_animations_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM animations WHERE animations.vircadia_uuid = animations_metadata.animation_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_animations WHERE world_gltf_animations.vircadia_uuid = world_gltf_animations_metadata.animation_id AND is_admin())
   );
 
--- Skins Metadata RLS
-CREATE POLICY skins_metadata_select_policy ON skins_metadata 
+-- World GLTF Skins Metadata RLS
+CREATE POLICY world_gltf_skins_metadata_select_policy ON world_gltf_skins_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM skins WHERE skins.vircadia_uuid = skins_metadata.skin_id)
+    EXISTS (SELECT 1 FROM world_gltf_skins WHERE world_gltf_skins.vircadia_uuid = world_gltf_skins_metadata.skin_id)
   );
 
-CREATE POLICY skins_metadata_insert_policy ON skins_metadata 
+CREATE POLICY world_gltf_skins_metadata_insert_policy ON world_gltf_skins_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM skins WHERE skins.vircadia_uuid = skins_metadata.skin_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_skins WHERE world_gltf_skins.vircadia_uuid = world_gltf_skins_metadata.skin_id AND is_admin())
   );
 
-CREATE POLICY skins_metadata_update_policy ON skins_metadata 
+CREATE POLICY world_gltf_skins_metadata_update_policy ON world_gltf_skins_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM skins WHERE skins.vircadia_uuid = skins_metadata.skin_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_skins WHERE world_gltf_skins.vircadia_uuid = world_gltf_skins_metadata.skin_id AND is_admin())
   );
 
-CREATE POLICY skins_metadata_delete_policy ON skins_metadata 
+CREATE POLICY world_gltf_skins_metadata_delete_policy ON world_gltf_skins_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM skins WHERE skins.vircadia_uuid = skins_metadata.skin_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_skins WHERE world_gltf_skins.vircadia_uuid = world_gltf_skins_metadata.skin_id AND is_admin())
   );
 
--- Cameras Metadata RLS
-CREATE POLICY cameras_metadata_select_policy ON cameras_metadata 
+-- World GLTF Cameras Metadata RLS
+CREATE POLICY world_gltf_cameras_metadata_select_policy ON world_gltf_cameras_metadata 
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM cameras WHERE cameras.vircadia_uuid = cameras_metadata.camera_id)
+    EXISTS (SELECT 1 FROM world_gltf_cameras WHERE world_gltf_cameras.vircadia_uuid = world_gltf_cameras_metadata.camera_id)
   );
 
-CREATE POLICY cameras_metadata_insert_policy ON cameras_metadata 
+CREATE POLICY world_gltf_cameras_metadata_insert_policy ON world_gltf_cameras_metadata 
   FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM cameras WHERE cameras.vircadia_uuid = cameras_metadata.camera_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_cameras WHERE world_gltf_cameras.vircadia_uuid = world_gltf_cameras_metadata.camera_id AND is_admin())
   );
 
-CREATE POLICY cameras_metadata_update_policy ON cameras_metadata 
+CREATE POLICY world_gltf_cameras_metadata_update_policy ON world_gltf_cameras_metadata 
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM cameras WHERE cameras.vircadia_uuid = cameras_metadata.camera_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_cameras WHERE world_gltf_cameras.vircadia_uuid = world_gltf_cameras_metadata.camera_id AND is_admin())
   );
 
-CREATE POLICY cameras_metadata_delete_policy ON cameras_metadata 
+CREATE POLICY world_gltf_cameras_metadata_delete_policy ON world_gltf_cameras_metadata 
   FOR DELETE USING (
-    EXISTS (SELECT 1 FROM cameras WHERE cameras.vircadia_uuid = cameras_metadata.camera_id AND is_admin())
+    EXISTS (SELECT 1 FROM world_gltf_cameras WHERE world_gltf_cameras.vircadia_uuid = world_gltf_cameras_metadata.camera_id AND is_admin())
   );

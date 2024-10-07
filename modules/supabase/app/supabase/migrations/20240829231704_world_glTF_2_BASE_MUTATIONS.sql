@@ -1,16 +1,15 @@
 -- World GLTF
 
 CREATE OR REPLACE FUNCTION create_world_gltf(
-  p_name TEXT,
-  p_version TEXT,
-  p_metadata JSONB,
-  p_defaultScene TEXT,
-  p_extensionsUsed TEXT[],
-  p_extensionsRequired TEXT[],
-  p_extensions JSONB,
-  p_extras JSONB,
-  p_asset JSONB,
-  p_vircadia_name TEXT,
+  p_gltf_name TEXT,
+  p_gltf_version TEXT,
+  p_gltf_metadata JSONB,
+  p_gltf_scene TEXT,
+  p_gltf_extensionsUsed TEXT[],
+  p_gltf_extensionsRequired TEXT[],
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
+  p_gltf_asset JSONB,
   p_vircadia_version TEXT
 )
 RETURNS UUID AS $$
@@ -21,8 +20,8 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create world_gltf entries';
   END IF;
 
-  INSERT INTO world_gltf (name, version, metadata, defaultScene, extensionsUsed, extensionsRequired, extensions, extras, asset,  vircadia_version)
-  VALUES (p_name, p_version, p_metadata, p_defaultScene, p_extensionsUsed, p_extensionsRequired, p_extensions, p_extras, p_asset, p_vircadia_name, p_vircadia_version)
+  INSERT INTO world_gltf (gltf_name, gltf_version, gltf_metadata, gltf_defaultScene, gltf_extensionsUsed, gltf_extensionsRequired, gltf_extensions, gltf_extras, gltf_asset, vircadia_version)
+  VALUES (p_gltf_name, p_gltf_version, p_gltf_metadata, p_gltf_scene, p_gltf_extensionsUsed, p_gltf_extensionsRequired, p_gltf_extensions, p_gltf_extras, p_gltf_asset, p_vircadia_version)
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
@@ -30,16 +29,15 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION update_world_gltf(
   p_vircadia_uuid UUID,
-  p_name TEXT DEFAULT NULL,
-  p_version TEXT DEFAULT NULL,
-  p_metadata JSONB DEFAULT NULL,
-  p_defaultScene TEXT DEFAULT NULL,
-  p_extensionsUsed TEXT[] DEFAULT NULL,
-  p_extensionsRequired TEXT[] DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
-  p_asset JSONB DEFAULT NULL,
-  p_vircadia_name TEXT DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_version TEXT DEFAULT NULL,
+  p_gltf_metadata JSONB DEFAULT NULL,
+  p_gltf_defaultScene TEXT DEFAULT NULL,
+  p_gltf_extensionsUsed TEXT[] DEFAULT NULL,
+  p_gltf_extensionsRequired TEXT[] DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
+  p_gltf_asset JSONB DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL
 )
 RETURNS VOID AS $$
@@ -50,16 +48,15 @@ BEGIN
 
   UPDATE world_gltf
   SET 
-    name = COALESCE(p_name, name),
-    version = COALESCE(p_version, version),
-    metadata = COALESCE(p_metadata, metadata),
-    defaultScene = COALESCE(p_defaultScene, defaultScene),
-    extensionsUsed = COALESCE(p_extensionsUsed, extensionsUsed),
-    extensionsRequired = COALESCE(p_extensionsRequired, extensionsRequired),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
-    asset = COALESCE(p_asset, asset),
-    
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_version = COALESCE(p_gltf_version, gltf_version),
+    gltf_metadata = COALESCE(p_gltf_metadata, gltf_metadata),
+    gltf_defaultScene = COALESCE(p_gltf_defaultScene, gltf_defaultScene),
+    gltf_extensionsUsed = COALESCE(p_gltf_extensionsUsed, gltf_extensionsUsed),
+    gltf_extensionsRequired = COALESCE(p_gltf_extensionsRequired, gltf_extensionsRequired),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
+    gltf_asset = COALESCE(p_gltf_asset, gltf_asset),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
@@ -84,13 +81,12 @@ CREATE POLICY world_gltf_delete_policy ON world_gltf FOR DELETE USING (is_admin(
 
 -- Scenes
 
-CREATE OR REPLACE FUNCTION create_scene(
+CREATE OR REPLACE FUNCTION create_world_gltf_scene(
   p_vircadia_world_uuid UUID,
-  p_name TEXT,
-  p_nodes JSONB,
-  p_extensions JSONB,
-  p_extras JSONB,
-  p_vircadia_name TEXT,
+  p_gltf_name TEXT,
+  p_gltf_nodes JSONB,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_scene_clearColor JSONB,
   p_vircadia_babylonjs_scene_ambientColor JSONB,
@@ -114,9 +110,9 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create scene entries';
   END IF;
 
-  INSERT INTO scenes (
-    vircadia_world_uuid, name, nodes, extensions, extras,
-     vircadia_version,
+  INSERT INTO world_gltf_scenes (
+    vircadia_world_uuid, gltf_name, gltf_nodes, gltf_extensions, gltf_extras,
+    vircadia_version,
     vircadia_babylonjs_scene_clearColor, vircadia_babylonjs_scene_ambientColor,
     vircadia_babylonjs_scene_gravity, vircadia_babylonjs_scene_activeCamera,
     vircadia_babylonjs_scene_collisionsEnabled, vircadia_babylonjs_scene_physicsEnabled,
@@ -126,8 +122,8 @@ BEGIN
     vircadia_babylonjs_scene_autoAnimateSpeed
   )
   VALUES (
-    p_vircadia_world_uuid, p_name, p_nodes, p_extensions, p_extras,
-    p_vircadia_name, p_vircadia_version,
+    p_vircadia_world_uuid, p_gltf_name, p_gltf_nodes, p_gltf_extensions, p_gltf_extras,
+    p_vircadia_version,
     p_vircadia_babylonjs_scene_clearColor, p_vircadia_babylonjs_scene_ambientColor,
     p_vircadia_babylonjs_scene_gravity, p_vircadia_babylonjs_scene_activeCamera,
     p_vircadia_babylonjs_scene_collisionsEnabled, p_vircadia_babylonjs_scene_physicsEnabled,
@@ -141,13 +137,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_scene(
+CREATE OR REPLACE FUNCTION update_world_gltf_scene(
   p_vircadia_uuid UUID,
-  p_name TEXT DEFAULT NULL,
-  p_nodes JSONB DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
-  p_vircadia_name TEXT DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_nodes JSONB DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_scene_clearColor JSONB DEFAULT NULL,
   p_vircadia_babylonjs_scene_ambientColor JSONB DEFAULT NULL,
@@ -169,13 +164,12 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update scene entries';
   END IF;
 
-  UPDATE scenes
+  UPDATE world_gltf_scenes
   SET 
-    name = COALESCE(p_name, name),
-    nodes = COALESCE(p_nodes, nodes),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
-    
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_nodes = COALESCE(p_gltf_nodes, gltf_nodes),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_scene_clearColor = COALESCE(p_vircadia_babylonjs_scene_clearColor, vircadia_babylonjs_scene_clearColor),
     vircadia_babylonjs_scene_ambientColor = COALESCE(p_vircadia_babylonjs_scene_ambientColor, vircadia_babylonjs_scene_ambientColor),
@@ -194,40 +188,39 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_scene(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_scene(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete scene entries';
   END IF;
 
-  DELETE FROM scenes WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_scenes WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for scenes
-CREATE POLICY scenes_select_policy ON scenes FOR SELECT USING (true);
-CREATE POLICY scenes_insert_policy ON scenes FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY scenes_update_policy ON scenes FOR UPDATE USING (is_admin());
-CREATE POLICY scenes_delete_policy ON scenes FOR DELETE USING (is_admin());
+-- RLS for world_gltf_scenes
+CREATE POLICY world_gltf_scenes_select_policy ON world_gltf_scenes FOR SELECT USING (true);
+CREATE POLICY world_gltf_scenes_insert_policy ON world_gltf_scenes FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_scenes_update_policy ON world_gltf_scenes FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_scenes_delete_policy ON world_gltf_scenes FOR DELETE USING (is_admin());
 
 -- Nodes
 
-CREATE OR REPLACE FUNCTION create_node(
+CREATE OR REPLACE FUNCTION create_world_gltf_node(
   p_vircadia_world_uuid UUID,
-  p_name TEXT,
-  p_camera TEXT,
-  p_children JSONB,
-  p_skin TEXT,
-  p_matrix NUMERIC[16],
-  p_mesh TEXT,
-  p_rotation NUMERIC[4],
-  p_scale NUMERIC[3],
-  p_translation NUMERIC[3],
-  p_weights JSONB,
-  p_extensions JSONB,
-  p_extras JSONB,
-  p_vircadia_name TEXT,
+  p_gltf_name TEXT,
+  p_gltf_camera TEXT,
+  p_gltf_children JSONB,
+  p_gltf_skin TEXT,
+  p_gltf_matrix NUMERIC[16],
+  p_gltf_mesh TEXT,
+  p_gltf_rotation NUMERIC[4],
+  p_gltf_scale NUMERIC[3],
+  p_gltf_translation NUMERIC[3],
+  p_gltf_weights JSONB,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
   p_vircadia_babylonjs_lod_auto BOOLEAN,
@@ -252,17 +245,17 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create node entries';
   END IF;
 
-  INSERT INTO nodes (
-    vircadia_world_uuid, name, camera, children, skin, matrix, mesh, rotation, scale, translation, weights, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_distance,
+  INSERT INTO world_gltf_nodes (
+    vircadia_world_uuid, gltf_name, gltf_camera, gltf_children, gltf_skin, gltf_matrix, gltf_mesh, gltf_rotation, gltf_scale, gltf_translation, gltf_weights, gltf_extensions, gltf_extras,
+    vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_distance,
     vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide, vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap,
     vircadia_babylonjs_light_level, vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord,
     vircadia_babylonjs_light_use_as_shadowmap, vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts,
     vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_name, p_camera, p_children, p_skin, p_matrix, p_mesh, p_rotation, p_scale, p_translation, p_weights,
-    p_extensions, p_extras, p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
+    p_vircadia_world_uuid, p_gltf_name, p_gltf_camera, p_gltf_children, p_gltf_skin, p_gltf_matrix, p_gltf_mesh, p_gltf_rotation, p_gltf_scale, p_gltf_translation, p_gltf_weights,
+    p_gltf_extensions, p_gltf_extras, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide, p_vircadia_babylonjs_billboard_mode,
     p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level, p_vircadia_babylonjs_light_color_space,
     p_vircadia_babylonjs_light_texcoord, p_vircadia_babylonjs_light_use_as_shadowmap, p_vircadia_babylonjs_light_mode,
@@ -273,21 +266,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_node(
+CREATE OR REPLACE FUNCTION update_world_gltf_node(
   p_vircadia_uuid UUID,
-  p_name TEXT DEFAULT NULL,
-  p_camera TEXT DEFAULT NULL,
-  p_children JSONB DEFAULT NULL,
-  p_skin TEXT DEFAULT NULL,
-  p_matrix NUMERIC[16] DEFAULT NULL,
-  p_mesh TEXT DEFAULT NULL,
-  p_rotation NUMERIC[4] DEFAULT NULL,
-  p_scale NUMERIC[3] DEFAULT NULL,
-  p_translation NUMERIC[3] DEFAULT NULL,
-  p_weights JSONB DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
-  p_vircadia_name TEXT DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_camera TEXT DEFAULT NULL,
+  p_gltf_children JSONB DEFAULT NULL,
+  p_gltf_skin TEXT DEFAULT NULL,
+  p_gltf_matrix NUMERIC[16] DEFAULT NULL,
+  p_gltf_mesh TEXT DEFAULT NULL,
+  p_gltf_rotation NUMERIC[4] DEFAULT NULL,
+  p_gltf_scale NUMERIC[3] DEFAULT NULL,
+  p_gltf_translation NUMERIC[3] DEFAULT NULL,
+  p_gltf_weights JSONB DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_auto BOOLEAN DEFAULT NULL,
@@ -310,21 +302,20 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update node entries';
   END IF;
 
-  UPDATE nodes
+  UPDATE world_gltf_nodes
   SET 
-    name = COALESCE(p_name, name),
-    camera = COALESCE(p_camera, camera),
-    children = COALESCE(p_children, children),
-    skin = COALESCE(p_skin, skin),
-    matrix = COALESCE(p_matrix, matrix),
-    mesh = COALESCE(p_mesh, mesh),
-    rotation = COALESCE(p_rotation, rotation),
-    scale = COALESCE(p_scale, scale),
-    translation = COALESCE(p_translation, translation),
-    weights = COALESCE(p_weights, weights),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
-    
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_camera = COALESCE(p_gltf_camera, gltf_camera),
+    gltf_children = COALESCE(p_gltf_children, gltf_children),
+    gltf_skin = COALESCE(p_gltf_skin, gltf_skin),
+    gltf_matrix = COALESCE(p_gltf_matrix, gltf_matrix),
+    gltf_mesh = COALESCE(p_gltf_mesh, gltf_mesh),
+    gltf_rotation = COALESCE(p_gltf_rotation, gltf_rotation),
+    gltf_scale = COALESCE(p_gltf_scale, gltf_scale),
+    gltf_translation = COALESCE(p_gltf_translation, gltf_translation),
+    gltf_weights = COALESCE(p_gltf_weights, gltf_weights),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -344,33 +335,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_node(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_node(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete node entries';
   END IF;
 
-  DELETE FROM nodes WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_nodes WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for nodes
-CREATE POLICY nodes_select_policy ON nodes FOR SELECT USING (true);
-CREATE POLICY nodes_insert_policy ON nodes FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY nodes_update_policy ON nodes FOR UPDATE USING (is_admin());
-CREATE POLICY nodes_delete_policy ON nodes FOR DELETE USING (is_admin());
+-- RLS for world_gltf_nodes
+CREATE POLICY world_gltf_nodes_select_policy ON world_gltf_nodes FOR SELECT USING (true);
+CREATE POLICY world_gltf_nodes_insert_policy ON world_gltf_nodes FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_nodes_update_policy ON world_gltf_nodes FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_nodes_delete_policy ON world_gltf_nodes FOR DELETE USING (is_admin());
 
 -- Meshes
 
-CREATE OR REPLACE FUNCTION create_mesh(
+CREATE OR REPLACE FUNCTION create_world_gltf_mesh(
   p_vircadia_world_uuid UUID,
-  p_name TEXT,
-  p_primitives JSONB,
-  p_weights JSONB,
-  p_extensions JSONB,
-  p_extras JSONB,
-  p_vircadia_name TEXT,
+  p_gltf_name TEXT,
+  p_gltf_primitives JSONB,
+  p_gltf_weights JSONB,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
   p_vircadia_babylonjs_lod_auto BOOLEAN,
@@ -395,17 +385,17 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create mesh entries';
   END IF;
 
-  INSERT INTO meshes (
-    vircadia_world_uuid, name, primitives, weights, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
+  INSERT INTO world_gltf_meshes (
+    vircadia_world_uuid, gltf_name, gltf_primitives, gltf_weights, gltf_extensions, gltf_extras,
+    vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
     vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide,
     vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap, vircadia_babylonjs_light_level,
     vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord, vircadia_babylonjs_light_use_as_shadowmap,
     vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_name, p_primitives, p_weights, p_extensions, p_extras,
-    p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
+    p_vircadia_world_uuid, p_gltf_name, p_gltf_primitives, p_gltf_weights, p_gltf_extensions, p_gltf_extras,
+    p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide,
     p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level,
     p_vircadia_babylonjs_light_color_space, p_vircadia_babylonjs_light_texcoord, p_vircadia_babylonjs_light_use_as_shadowmap,
@@ -416,14 +406,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_mesh(
+CREATE OR REPLACE FUNCTION update_world_gltf_mesh(
   p_vircadia_uuid UUID,
-  p_name TEXT DEFAULT NULL,
-  p_primitives JSONB DEFAULT NULL,
-  p_weights JSONB DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
-  p_vircadia_name TEXT DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_primitives JSONB DEFAULT NULL,
+  p_gltf_weights JSONB DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_auto BOOLEAN DEFAULT NULL,
@@ -446,14 +435,13 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update mesh entries';
   END IF;
 
-  UPDATE meshes
+  UPDATE world_gltf_meshes
   SET 
-    name = COALESCE(p_name, name),
-    primitives = COALESCE(p_primitives, primitives),
-    weights = COALESCE(p_weights, weights),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
-    
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_primitives = COALESCE(p_gltf_primitives, gltf_primitives),
+    gltf_weights = COALESCE(p_gltf_weights, gltf_weights),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -473,39 +461,38 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_mesh(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_mesh(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete mesh entries';
   END IF;
 
-  DELETE FROM meshes WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_meshes WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for meshes
-CREATE POLICY meshes_select_policy ON meshes FOR SELECT USING (true);
-CREATE POLICY meshes_insert_policy ON meshes FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY meshes_update_policy ON meshes FOR UPDATE USING (is_admin());
-CREATE POLICY meshes_delete_policy ON meshes FOR DELETE USING (is_admin());
+-- RLS for world_gltf_meshes
+CREATE POLICY world_gltf_meshes_select_policy ON world_gltf_meshes FOR SELECT USING (true);
+CREATE POLICY world_gltf_meshes_insert_policy ON world_gltf_meshes FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_meshes_update_policy ON world_gltf_meshes FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_meshes_delete_policy ON world_gltf_meshes FOR DELETE USING (is_admin());
 
 -- Materials
 
-CREATE OR REPLACE FUNCTION create_material(
+CREATE OR REPLACE FUNCTION create_world_gltf_material(
   p_vircadia_world_uuid UUID,
-  p_name TEXT,
-  p_pbrMetallicRoughness JSONB,
-  p_normalTexture JSONB,
-  p_occlusionTexture JSONB,
-  p_emissiveTexture JSONB,
-  p_emissiveFactor NUMERIC[3],
-  p_alphaMode TEXT,
-  p_alphaCutoff NUMERIC,
-  p_doubleSided BOOLEAN,
-  p_extensions JSONB,
-  p_extras JSONB,
-  p_vircadia_name TEXT,
+  p_gltf_name TEXT,
+  p_gltf_pbrMetallicRoughness JSONB,
+  p_gltf_normalTexture JSONB,
+  p_gltf_occlusionTexture JSONB,
+  p_gltf_emissiveTexture JSONB,
+  p_gltf_emissiveFactor NUMERIC[3],
+  p_gltf_alphaMode TEXT,
+  p_gltf_alphaCutoff NUMERIC,
+  p_gltf_doubleSided BOOLEAN,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
   p_vircadia_babylonjs_lod_auto BOOLEAN,
@@ -530,19 +517,19 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create material entries';
   END IF;
 
-  INSERT INTO materials (
-    vircadia_world_uuid, name, pbrMetallicRoughness, normalTexture, occlusionTexture, emissiveTexture,
-    emissiveFactor, alphaMode, alphaCutoff, doubleSided, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
+  INSERT INTO world_gltf_materials (
+    vircadia_world_uuid, gltf_name, gltf_pbrMetallicRoughness, gltf_normalTexture, gltf_occlusionTexture, gltf_emissiveTexture,
+    gltf_emissiveFactor, gltf_alphaMode, gltf_alphaCutoff, gltf_doubleSided, gltf_extensions, gltf_extras,
+    vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
     vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide,
     vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap, vircadia_babylonjs_light_level,
     vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord, vircadia_babylonjs_light_use_as_shadowmap,
     vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_name, p_pbrMetallicRoughness, p_normalTexture, p_occlusionTexture, p_emissiveTexture,
-    p_emissiveFactor, p_alphaMode, p_alphaCutoff, p_doubleSided, p_extensions, p_extras,
-    p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
+    p_vircadia_world_uuid, p_gltf_name, p_gltf_pbrMetallicRoughness, p_gltf_normalTexture, p_gltf_occlusionTexture, p_gltf_emissiveTexture,
+    p_gltf_emissiveFactor, p_gltf_alphaMode, p_gltf_alphaCutoff, p_gltf_doubleSided, p_gltf_extensions, p_gltf_extras,
+    p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide,
     p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level,
     p_vircadia_babylonjs_light_color_space, p_vircadia_babylonjs_light_texcoord, p_vircadia_babylonjs_light_use_as_shadowmap,
@@ -553,20 +540,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_material(
+CREATE OR REPLACE FUNCTION update_world_gltf_material(
   p_vircadia_uuid UUID,
-  p_name TEXT DEFAULT NULL,
-  p_pbrMetallicRoughness JSONB DEFAULT NULL,
-  p_normalTexture JSONB DEFAULT NULL,
-  p_occlusionTexture JSONB DEFAULT NULL,
-  p_emissiveTexture JSONB DEFAULT NULL,
-  p_emissiveFactor NUMERIC[3] DEFAULT NULL,
-  p_alphaMode TEXT DEFAULT NULL,
-  p_alphaCutoff NUMERIC DEFAULT NULL,
-  p_doubleSided BOOLEAN DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
-  p_vircadia_name TEXT DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_pbrMetallicRoughness JSONB DEFAULT NULL,
+  p_gltf_normalTexture JSONB DEFAULT NULL,
+  p_gltf_occlusionTexture JSONB DEFAULT NULL,
+  p_gltf_emissiveTexture JSONB DEFAULT NULL,
+  p_gltf_emissiveFactor NUMERIC[3] DEFAULT NULL,
+  p_gltf_alphaMode TEXT DEFAULT NULL,
+  p_gltf_alphaCutoff NUMERIC DEFAULT NULL,
+  p_gltf_doubleSided BOOLEAN DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_auto BOOLEAN DEFAULT NULL,
@@ -589,20 +575,19 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update material entries';
   END IF;
 
-  UPDATE materials
+  UPDATE world_gltf_materials
   SET 
-    name = COALESCE(p_name, name),
-    pbrMetallicRoughness = COALESCE(p_pbrMetallicRoughness, pbrMetallicRoughness),
-    normalTexture = COALESCE(p_normalTexture, normalTexture),
-    occlusionTexture = COALESCE(p_occlusionTexture, occlusionTexture),
-    emissiveTexture = COALESCE(p_emissiveTexture, emissiveTexture),
-    emissiveFactor = COALESCE(p_emissiveFactor, emissiveFactor),
-    alphaMode = COALESCE(p_alphaMode, alphaMode),
-    alphaCutoff = COALESCE(p_alphaCutoff, alphaCutoff),
-    doubleSided = COALESCE(p_doubleSided, doubleSided),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
-    
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_pbrMetallicRoughness = COALESCE(p_gltf_pbrMetallicRoughness, gltf_pbrMetallicRoughness),
+    gltf_normalTexture = COALESCE(p_gltf_normalTexture, gltf_normalTexture),
+    gltf_occlusionTexture = COALESCE(p_gltf_occlusionTexture, gltf_occlusionTexture),
+    gltf_emissiveTexture = COALESCE(p_gltf_emissiveTexture, gltf_emissiveTexture),
+    gltf_emissiveFactor = COALESCE(p_gltf_emissiveFactor, gltf_emissiveFactor),
+    gltf_alphaMode = COALESCE(p_gltf_alphaMode, gltf_alphaMode),
+    gltf_alphaCutoff = COALESCE(p_gltf_alphaCutoff, gltf_alphaCutoff),
+    gltf_doubleSided = COALESCE(p_gltf_doubleSided, gltf_doubleSided),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -622,33 +607,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_material(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_material(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete material entries';
   END IF;
 
-  DELETE FROM materials WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_materials WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for materials
-CREATE POLICY materials_select_policy ON materials FOR SELECT USING (true);
-CREATE POLICY materials_insert_policy ON materials FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY materials_update_policy ON materials FOR UPDATE USING (is_admin());
-CREATE POLICY materials_delete_policy ON materials FOR DELETE USING (is_admin());
+-- RLS for world_gltf_materials
+CREATE POLICY world_gltf_materials_select_policy ON world_gltf_materials FOR SELECT USING (true);
+CREATE POLICY world_gltf_materials_insert_policy ON world_gltf_materials FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_materials_update_policy ON world_gltf_materials FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_materials_delete_policy ON world_gltf_materials FOR DELETE USING (is_admin());
 
 -- Textures
 
-CREATE OR REPLACE FUNCTION create_texture(
+CREATE OR REPLACE FUNCTION create_world_gltf_texture(
   p_vircadia_world_uuid UUID,
-  p_name TEXT,
-  p_sampler TEXT,
-  p_source TEXT,
-  p_extensions JSONB,
-  p_extras JSONB,
-  p_vircadia_name TEXT,
+  p_gltf_name TEXT,
+  p_gltf_sampler TEXT,
+  p_gltf_source TEXT,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
   p_vircadia_babylonjs_lod_auto BOOLEAN,
@@ -673,17 +657,17 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create texture entries';
   END IF;
 
-  INSERT INTO textures (
-    vircadia_world_uuid, name, sampler, source, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
+  INSERT INTO world_gltf_textures (
+    vircadia_world_uuid, gltf_name, gltf_sampler, gltf_source, gltf_extensions, gltf_extras,
+    vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
     vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide,
     vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap, vircadia_babylonjs_light_level,
     vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord, vircadia_babylonjs_light_use_as_shadowmap,
     vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_name, p_sampler, p_source, p_extensions, p_extras,
-    p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
+    p_vircadia_world_uuid, p_gltf_name, p_gltf_sampler, p_gltf_source, p_gltf_extensions, p_gltf_extras,
+    p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide,
     p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level,
     p_vircadia_babylonjs_light_color_space, p_vircadia_babylonjs_light_texcoord, p_vircadia_babylonjs_light_use_as_shadowmap,
@@ -694,14 +678,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_texture(
+CREATE OR REPLACE FUNCTION update_world_gltf_texture(
   p_vircadia_uuid UUID,
-  p_name TEXT DEFAULT NULL,
-  p_sampler TEXT DEFAULT NULL,
-  p_source TEXT DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
-  p_vircadia_name TEXT DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_sampler TEXT DEFAULT NULL,
+  p_gltf_source TEXT DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_auto BOOLEAN DEFAULT NULL,
@@ -724,14 +707,13 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update texture entries';
   END IF;
 
-  UPDATE textures
+  UPDATE world_gltf_textures
   SET 
-    name = COALESCE(p_name, name),
-    sampler = COALESCE(p_sampler, sampler),
-    source = COALESCE(p_source, source),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
-    
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_sampler = COALESCE(p_gltf_sampler, gltf_sampler),
+    gltf_source = COALESCE(p_gltf_source, gltf_source),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -751,33 +733,33 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_texture(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_texture(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete texture entries';
   END IF;
 
-  DELETE FROM textures WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_textures WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for textures
-CREATE POLICY textures_select_policy ON textures FOR SELECT USING (true);
-CREATE POLICY textures_insert_policy ON textures FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY textures_update_policy ON textures FOR UPDATE USING (is_admin());
-CREATE POLICY textures_delete_policy ON textures FOR DELETE USING (is_admin());
+-- RLS for world_gltf_textures
+CREATE POLICY world_gltf_textures_select_policy ON world_gltf_textures FOR SELECT USING (true);
+CREATE POLICY world_gltf_textures_insert_policy ON world_gltf_textures FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_textures_update_policy ON world_gltf_textures FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_textures_delete_policy ON world_gltf_textures FOR DELETE USING (is_admin());
 
 -- Images
 
-CREATE OR REPLACE FUNCTION create_image(
+CREATE OR REPLACE FUNCTION create_world_gltf_image(
   p_vircadia_world_uuid UUID,
-  p_name TEXT,
-  p_uri TEXT,
-  p_mimeType TEXT,
-  p_bufferView TEXT,
-  p_extensions JSONB,
-  p_extras JSONB,
+  p_gltf_name TEXT,
+  p_gltf_uri TEXT,
+  p_gltf_mimeType TEXT,
+  p_gltf_bufferView TEXT,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_name TEXT,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
@@ -803,16 +785,16 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create image entries';
   END IF;
 
-  INSERT INTO images (
-    vircadia_world_uuid, name, uri, mimeType, bufferView, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
+  INSERT INTO world_gltf_images (
+    vircadia_world_uuid, gltf_name, gltf_uri, gltf_mimeType, gltf_bufferView, gltf_extensions, gltf_extras,
+    vircadia_name, vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
     vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide,
     vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap, vircadia_babylonjs_light_level,
     vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord, vircadia_babylonjs_light_use_as_shadowmap,
     vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_name, p_uri, p_mimeType, p_bufferView, p_extensions, p_extras,
+    p_vircadia_world_uuid, p_gltf_name, p_gltf_uri, p_gltf_mimeType, p_gltf_bufferView, p_gltf_extensions, p_gltf_extras,
     p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide,
     p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level,
@@ -824,14 +806,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_image(
+CREATE OR REPLACE FUNCTION update_world_gltf_image(
   p_vircadia_uuid UUID,
-  p_name TEXT DEFAULT NULL,
-  p_uri TEXT DEFAULT NULL,
-  p_mimeType TEXT DEFAULT NULL,
-  p_bufferView TEXT DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_uri TEXT DEFAULT NULL,
+  p_gltf_mimeType TEXT DEFAULT NULL,
+  p_gltf_bufferView TEXT DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_name TEXT DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
@@ -855,15 +837,16 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update image entries';
   END IF;
 
-  UPDATE images
+  UPDATE world_gltf_images
   SET 
-    name = COALESCE(p_name, name),
-    uri = COALESCE(p_uri, uri),
-    mimeType = COALESCE(p_mimeType, mimeType),
-    bufferView = COALESCE(p_bufferView, bufferView),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_uri = COALESCE(p_gltf_uri, gltf_uri),
+    gltf_mimeType = COALESCE(p_gltf_mimeType, gltf_mimeType),
+    gltf_bufferView = COALESCE(p_gltf_bufferView, gltf_bufferView),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
     
+    vircadia_name = COALESCE(p_vircadia_name, vircadia_name),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -883,34 +866,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_image(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_image(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete image entries';
   END IF;
 
-  DELETE FROM images WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_images WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for images
-CREATE POLICY images_select_policy ON images FOR SELECT USING (true);
-CREATE POLICY images_insert_policy ON images FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY images_update_policy ON images FOR UPDATE USING (is_admin());
-CREATE POLICY images_delete_policy ON images FOR DELETE USING (is_admin());
+-- RLS for world_gltf_images
+CREATE POLICY world_gltf_images_select_policy ON world_gltf_images FOR SELECT USING (true);
+CREATE POLICY world_gltf_images_insert_policy ON world_gltf_images FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_images_update_policy ON world_gltf_images FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_images_delete_policy ON world_gltf_images FOR DELETE USING (is_admin());
 
 -- Samplers
 
-CREATE OR REPLACE FUNCTION create_sampler(
+CREATE OR REPLACE FUNCTION create_world_gltf_sampler(
   p_vircadia_world_uuid UUID,
-  p_name TEXT,
-  p_magFilter TEXT,
-  p_minFilter TEXT,
-  p_wrapS TEXT,
-  p_wrapT TEXT,
-  p_extensions JSONB,
-  p_extras JSONB,
+  p_gltf_name TEXT,
+  p_gltf_magFilter TEXT,
+  p_gltf_minFilter TEXT,
+  p_gltf_wrapS TEXT,
+  p_gltf_wrapT TEXT,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_name TEXT,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
@@ -936,16 +919,16 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create sampler entries';
   END IF;
 
-  INSERT INTO samplers (
-    vircadia_world_uuid, name, magFilter, minFilter, wrapS, wrapT, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
+  INSERT INTO world_gltf_samplers (
+    vircadia_world_uuid, gltf_name, gltf_magFilter, gltf_minFilter, gltf_wrapS, gltf_wrapT, gltf_extensions, gltf_extras,
+    vircadia_name, vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
     vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide,
     vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap, vircadia_babylonjs_light_level,
     vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord, vircadia_babylonjs_light_use_as_shadowmap,
     vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_name, p_magFilter, p_minFilter, p_wrapS, p_wrapT, p_extensions, p_extras,
+    p_vircadia_world_uuid, p_gltf_name, p_gltf_magFilter, p_gltf_minFilter, p_gltf_wrapS, p_gltf_wrapT, p_gltf_extensions, p_gltf_extras,
     p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide,
     p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level,
@@ -957,15 +940,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_sampler(
+CREATE OR REPLACE FUNCTION update_world_gltf_sampler(
   p_vircadia_uuid UUID,
-  p_name TEXT DEFAULT NULL,
-  p_magFilter TEXT DEFAULT NULL,
-  p_minFilter TEXT DEFAULT NULL,
-  p_wrapS TEXT DEFAULT NULL,
-  p_wrapT TEXT DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_magFilter TEXT DEFAULT NULL,
+  p_gltf_minFilter TEXT DEFAULT NULL,
+  p_gltf_wrapS TEXT DEFAULT NULL,
+  p_gltf_wrapT TEXT DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_name TEXT DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
@@ -989,16 +972,17 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update sampler entries';
   END IF;
 
-  UPDATE samplers
+  UPDATE world_gltf_samplers
   SET 
-    name = COALESCE(p_name, name),
-    magFilter = COALESCE(p_magFilter, magFilter),
-    minFilter = COALESCE(p_minFilter, minFilter),
-    wrapS = COALESCE(p_wrapS, wrapS),
-    wrapT = COALESCE(p_wrapT, wrapT),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_magFilter = COALESCE(p_gltf_magFilter, gltf_magFilter),
+    gltf_minFilter = COALESCE(p_gltf_minFilter, gltf_minFilter),
+    gltf_wrapS = COALESCE(p_gltf_wrapS, gltf_wrapS),
+    gltf_wrapT = COALESCE(p_gltf_wrapT, gltf_wrapT),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
     
+    vircadia_name = COALESCE(p_vircadia_name, vircadia_name),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -1018,32 +1002,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_sampler(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_sampler(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete sampler entries';
   END IF;
 
-  DELETE FROM samplers WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_samplers WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for samplers
-CREATE POLICY samplers_select_policy ON samplers FOR SELECT USING (true);
-CREATE POLICY samplers_insert_policy ON samplers FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY samplers_update_policy ON samplers FOR UPDATE USING (is_admin());
-CREATE POLICY samplers_delete_policy ON samplers FOR DELETE USING (is_admin());
+-- RLS for world_gltf_samplers
+CREATE POLICY world_gltf_samplers_select_policy ON world_gltf_samplers FOR SELECT USING (true);
+CREATE POLICY world_gltf_samplers_insert_policy ON world_gltf_samplers FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_samplers_update_policy ON world_gltf_samplers FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_samplers_delete_policy ON world_gltf_samplers FOR DELETE USING (is_admin());
 
 -- Buffers
 
-CREATE OR REPLACE FUNCTION create_buffer(
+CREATE OR REPLACE FUNCTION create_world_gltf_buffer(
   p_vircadia_world_uuid UUID,
-  p_name TEXT,
-  p_uri TEXT,
-  p_byteLength INTEGER,
-  p_extensions JSONB,
-  p_extras JSONB,
+  p_gltf_name TEXT,
+  p_gltf_uri TEXT,
+  p_gltf_byteLength INTEGER,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_name TEXT,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
@@ -1069,16 +1053,16 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create buffer entries';
   END IF;
 
-  INSERT INTO buffers (
-    vircadia_world_uuid, name, uri, byteLength, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
+  INSERT INTO world_gltf_buffers (
+    vircadia_world_uuid, gltf_name, gltf_uri, gltf_byteLength, gltf_extensions, gltf_extras,
+    vircadia_name, vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
     vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide,
     vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap, vircadia_babylonjs_light_level,
     vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord, vircadia_babylonjs_light_use_as_shadowmap,
     vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_name, p_uri, p_byteLength, p_extensions, p_extras,
+    p_vircadia_world_uuid, p_gltf_name, p_gltf_uri, p_gltf_byteLength, p_gltf_extensions, p_gltf_extras,
     p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide,
     p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level,
@@ -1090,13 +1074,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_buffer(
+CREATE OR REPLACE FUNCTION update_world_gltf_buffer(
   p_vircadia_uuid UUID,
-  p_name TEXT DEFAULT NULL,
-  p_uri TEXT DEFAULT NULL,
-  p_byteLength INTEGER DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_uri TEXT DEFAULT NULL,
+  p_gltf_byteLength INTEGER DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_name TEXT DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
@@ -1120,14 +1104,15 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update buffer entries';
   END IF;
 
-  UPDATE buffers
+  UPDATE world_gltf_buffers
   SET 
-    name = COALESCE(p_name, name),
-    uri = COALESCE(p_uri, uri),
-    byteLength = COALESCE(p_byteLength, byteLength),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_uri = COALESCE(p_gltf_uri, gltf_uri),
+    gltf_byteLength = COALESCE(p_gltf_byteLength, gltf_byteLength),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
     
+    vircadia_name = COALESCE(p_vircadia_name, vircadia_name),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -1147,35 +1132,35 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_buffer(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_buffer(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete buffer entries';
   END IF;
 
-  DELETE FROM buffers WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_buffers WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for buffers
-CREATE POLICY buffers_select_policy ON buffers FOR SELECT USING (true);
-CREATE POLICY buffers_insert_policy ON buffers FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY buffers_update_policy ON buffers FOR UPDATE USING (is_admin());
-CREATE POLICY buffers_delete_policy ON buffers FOR DELETE USING (is_admin());
+-- RLS for world_gltf_buffers
+CREATE POLICY world_gltf_buffers_select_policy ON world_gltf_buffers FOR SELECT USING (true);
+CREATE POLICY world_gltf_buffers_insert_policy ON world_gltf_buffers FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_buffers_update_policy ON world_gltf_buffers FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_buffers_delete_policy ON world_gltf_buffers FOR DELETE USING (is_admin());
 
 -- Buffer Views
 
-CREATE OR REPLACE FUNCTION create_buffer_view(
+CREATE OR REPLACE FUNCTION create_world_gltf_buffer_view(
   p_vircadia_world_uuid UUID,
-  p_buffer TEXT,
-  p_byteOffset INTEGER,
-  p_byteLength INTEGER,
-  p_byteStride INTEGER,
-  p_target TEXT,
-  p_name TEXT,
-  p_extensions JSONB,
-  p_extras JSONB,
+  p_gltf_buffer TEXT,
+  p_gltf_byteOffset INTEGER,
+  p_gltf_byteLength INTEGER,
+  p_gltf_byteStride INTEGER,
+  p_gltf_target TEXT,
+  p_gltf_name TEXT,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_name TEXT,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
@@ -1201,16 +1186,16 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create buffer view entries';
   END IF;
 
-  INSERT INTO buffer_views (
-    vircadia_world_uuid, buffer, byteOffset, byteLength, byteStride, target, name, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
+  INSERT INTO world_gltf_buffer_views (
+    vircadia_world_uuid, gltf_buffer, gltf_byteOffset, gltf_byteLength, gltf_byteStride, gltf_target, gltf_name, gltf_extensions, gltf_extras,
+    vircadia_name, vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
     vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide,
     vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap, vircadia_babylonjs_light_level,
     vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord, vircadia_babylonjs_light_use_as_shadowmap,
     vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_buffer, p_byteOffset, p_byteLength, p_byteStride, p_target, p_name, p_extensions, p_extras,
+    p_vircadia_world_uuid, p_gltf_buffer, p_gltf_byteOffset, p_gltf_byteLength, p_gltf_byteStride, p_gltf_target, p_gltf_name, p_gltf_extensions, p_gltf_extras,
     p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide,
     p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level,
@@ -1222,16 +1207,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_buffer_view(
+CREATE OR REPLACE FUNCTION update_world_gltf_buffer_view(
   p_vircadia_uuid UUID,
-  p_buffer TEXT DEFAULT NULL,
-  p_byteOffset INTEGER DEFAULT NULL,
-  p_byteLength INTEGER DEFAULT NULL,
-  p_byteStride INTEGER DEFAULT NULL,
-  p_target TEXT DEFAULT NULL,
-  p_name TEXT DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
+  p_gltf_buffer TEXT DEFAULT NULL,
+  p_gltf_byteOffset INTEGER DEFAULT NULL,
+  p_gltf_byteLength INTEGER DEFAULT NULL,
+  p_gltf_byteStride INTEGER DEFAULT NULL,
+  p_gltf_target TEXT DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_name TEXT DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
@@ -1255,17 +1240,17 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update buffer view entries';
   END IF;
 
-  UPDATE buffer_views
+  UPDATE world_gltf_buffer_views
   SET 
-    buffer = COALESCE(p_buffer, buffer),
-    byteOffset = COALESCE(p_byteOffset, byteOffset),
-    byteLength = COALESCE(p_byteLength, byteLength),
-    byteStride = COALESCE(p_byteStride, byteStride),
-    target = COALESCE(p_target, target),
-    name = COALESCE(p_name, name),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
-    
+    gltf_buffer = COALESCE(p_gltf_buffer, gltf_buffer),
+    gltf_byteOffset = COALESCE(p_gltf_byteOffset, gltf_byteOffset),
+    gltf_byteLength = COALESCE(p_gltf_byteLength, gltf_byteLength),
+    gltf_byteStride = COALESCE(p_gltf_byteStride, gltf_byteStride),
+    gltf_target = COALESCE(p_gltf_target, gltf_target),
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
+    vircadia_name = COALESCE(p_vircadia_name, vircadia_name),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -1285,39 +1270,39 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_buffer_view(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_buffer_view(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete buffer view entries';
   END IF;
 
-  DELETE FROM buffer_views WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_buffer_views WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for buffer_views
-CREATE POLICY buffer_views_select_policy ON buffer_views FOR SELECT USING (true);
-CREATE POLICY buffer_views_insert_policy ON buffer_views FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY buffer_views_update_policy ON buffer_views FOR UPDATE USING (is_admin());
-CREATE POLICY buffer_views_delete_policy ON buffer_views FOR DELETE USING (is_admin());
+-- RLS for world_gltf_buffer_views
+CREATE POLICY world_gltf_buffer_views_select_policy ON world_gltf_buffer_views FOR SELECT USING (true);
+CREATE POLICY world_gltf_buffer_views_insert_policy ON world_gltf_buffer_views FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_buffer_views_update_policy ON world_gltf_buffer_views FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_buffer_views_delete_policy ON world_gltf_buffer_views FOR DELETE USING (is_admin());
 
 -- Accessors
 
-CREATE OR REPLACE FUNCTION create_accessor(
+CREATE OR REPLACE FUNCTION create_world_gltf_accessor(
   p_vircadia_world_uuid UUID,
-  p_bufferView TEXT,
-  p_byteOffset INTEGER,
-  p_componentType TEXT,
-  p_normalized BOOLEAN,
-  p_count INTEGER,
-  p_type TEXT,
-  p_max NUMERIC[],
-  p_min NUMERIC[],
-  p_sparse JSONB,
-  p_name TEXT,
-  p_extensions JSONB,
-  p_extras JSONB,
+  p_gltf_bufferView TEXT,
+  p_gltf_byteOffset INTEGER,
+  p_gltf_componentType TEXT,
+  p_gltf_normalized BOOLEAN,
+  p_gltf_count INTEGER,
+  p_gltf_type TEXT,
+  p_gltf_max NUMERIC[],
+  p_gltf_min NUMERIC[],
+  p_gltf_sparse JSONB,
+  p_gltf_name TEXT,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_name TEXT,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
@@ -1343,9 +1328,9 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create accessor entries';
   END IF;
 
-  INSERT INTO accessors (
-    vircadia_world_uuid, bufferView, byteOffset, componentType, normalized, count, type, max, min, sparse,
-    name, extensions, extras,  vircadia_version, vircadia_babylonjs_lod_mode,
+  INSERT INTO world_gltf_accessors (
+    vircadia_world_uuid, gltf_bufferView, gltf_byteOffset, gltf_componentType, gltf_normalized, gltf_count, gltf_type, gltf_max, gltf_min, gltf_sparse,
+    gltf_name, gltf_extensions, gltf_extras, vircadia_name, vircadia_version, vircadia_babylonjs_lod_mode,
     vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size,
     vircadia_babylonjs_lod_hide, vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap,
     vircadia_babylonjs_light_level, vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord,
@@ -1353,8 +1338,8 @@ BEGIN
     vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_bufferView, p_byteOffset, p_componentType, p_normalized, p_count, p_type, p_max, p_min, p_sparse,
-    p_name, p_extensions, p_extras, p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode,
+    p_vircadia_world_uuid, p_gltf_bufferView, p_gltf_byteOffset, p_gltf_componentType, p_gltf_normalized, p_gltf_count, p_gltf_type, p_gltf_max, p_gltf_min, p_gltf_sparse,
+    p_gltf_name, p_gltf_extensions, p_gltf_extras, p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode,
     p_vircadia_babylonjs_lod_auto, p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size,
     p_vircadia_babylonjs_lod_hide, p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap,
     p_vircadia_babylonjs_light_level, p_vircadia_babylonjs_light_color_space, p_vircadia_babylonjs_light_texcoord,
@@ -1366,20 +1351,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_accessor(
+CREATE OR REPLACE FUNCTION update_world_gltf_accessor(
   p_vircadia_uuid UUID,
-  p_bufferView TEXT DEFAULT NULL,
-  p_byteOffset INTEGER DEFAULT NULL,
-  p_componentType TEXT DEFAULT NULL,
-  p_normalized BOOLEAN DEFAULT NULL,
-  p_count INTEGER DEFAULT NULL,
-  p_type TEXT DEFAULT NULL,
-  p_max NUMERIC[] DEFAULT NULL,
-  p_min NUMERIC[] DEFAULT NULL,
-  p_sparse JSONB DEFAULT NULL,
-  p_name TEXT DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
+  p_gltf_bufferView TEXT DEFAULT NULL,
+  p_gltf_byteOffset INTEGER DEFAULT NULL,
+  p_gltf_componentType TEXT DEFAULT NULL,
+  p_gltf_normalized BOOLEAN DEFAULT NULL,
+  p_gltf_count INTEGER DEFAULT NULL,
+  p_gltf_type TEXT DEFAULT NULL,
+  p_gltf_max NUMERIC[] DEFAULT NULL,
+  p_gltf_min NUMERIC[] DEFAULT NULL,
+  p_gltf_sparse JSONB DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_name TEXT DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
@@ -1403,21 +1388,21 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update accessor entries';
   END IF;
 
-  UPDATE accessors
+  UPDATE world_gltf_accessors
   SET 
-    bufferView = COALESCE(p_bufferView, bufferView),
-    byteOffset = COALESCE(p_byteOffset, byteOffset),
-    componentType = COALESCE(p_componentType, componentType),
-    normalized = COALESCE(p_normalized, normalized),
-    count = COALESCE(p_count, count),
-    type = COALESCE(p_type, type),
-    max = COALESCE(p_max, max),
-    min = COALESCE(p_min, min),
-    sparse = COALESCE(p_sparse, sparse),
-    name = COALESCE(p_name, name),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
-    
+    gltf_bufferView = COALESCE(p_gltf_bufferView, gltf_bufferView),
+    gltf_byteOffset = COALESCE(p_gltf_byteOffset, gltf_byteOffset),
+    gltf_componentType = COALESCE(p_gltf_componentType, gltf_componentType),
+    gltf_normalized = COALESCE(p_gltf_normalized, gltf_normalized),
+    gltf_count = COALESCE(p_gltf_count, gltf_count),
+    gltf_type = COALESCE(p_gltf_type, gltf_type),
+    gltf_max = COALESCE(p_gltf_max, gltf_max),
+    gltf_min = COALESCE(p_gltf_min, gltf_min),
+    gltf_sparse = COALESCE(p_gltf_sparse, gltf_sparse),
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
+    vircadia_name = COALESCE(p_vircadia_name, vircadia_name),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -1437,32 +1422,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_accessor(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_accessor(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete accessor entries';
   END IF;
 
-  DELETE FROM accessors WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_accessors WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for accessors
-CREATE POLICY accessors_select_policy ON accessors FOR SELECT USING (true);
-CREATE POLICY accessors_insert_policy ON accessors FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY accessors_update_policy ON accessors FOR UPDATE USING (is_admin());
-CREATE POLICY accessors_delete_policy ON accessors FOR DELETE USING (is_admin());
+-- RLS for world_gltf_accessors
+CREATE POLICY world_gltf_accessors_select_policy ON world_gltf_accessors FOR SELECT USING (true);
+CREATE POLICY world_gltf_accessors_insert_policy ON world_gltf_accessors FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_accessors_update_policy ON world_gltf_accessors FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_accessors_delete_policy ON world_gltf_accessors FOR DELETE USING (is_admin());
 
 -- Animations
 
-CREATE OR REPLACE FUNCTION create_animation(
+CREATE OR REPLACE FUNCTION create_world_gltf_animation(
   p_vircadia_world_uuid UUID,
-  p_channels JSONB,
-  p_samplers JSONB,
-  p_name TEXT,
-  p_extensions JSONB,
-  p_extras JSONB,
+  p_gltf_channels JSONB,
+  p_gltf_samplers JSONB,
+  p_gltf_name TEXT,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_name TEXT,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
@@ -1488,16 +1473,16 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create animation entries';
   END IF;
 
-  INSERT INTO animations (
-    vircadia_world_uuid, channels, samplers, name, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
+  INSERT INTO world_gltf_animations (
+    vircadia_world_uuid, gltf_channels, gltf_samplers, gltf_name, gltf_extensions, gltf_extras,
+    vircadia_name, vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
     vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide,
     vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap, vircadia_babylonjs_light_level,
     vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord, vircadia_babylonjs_light_use_as_shadowmap,
     vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_channels, p_samplers, p_name, p_extensions, p_extras,
+    p_vircadia_world_uuid, p_gltf_channels, p_gltf_samplers, p_gltf_name, p_gltf_extensions, p_gltf_extras,
     p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide,
     p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level,
@@ -1509,13 +1494,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_animation(
+CREATE OR REPLACE FUNCTION update_world_gltf_animation(
   p_vircadia_uuid UUID,
-  p_channels JSONB DEFAULT NULL,
-  p_samplers JSONB DEFAULT NULL,
-  p_name TEXT DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
+  p_gltf_channels JSONB DEFAULT NULL,
+  p_gltf_samplers JSONB DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_name TEXT DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
@@ -1539,14 +1524,15 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update animation entries';
   END IF;
 
-  UPDATE animations
+  UPDATE world_gltf_animations
   SET 
-    channels = COALESCE(p_channels, channels),
-    samplers = COALESCE(p_samplers, samplers),
-    name = COALESCE(p_name, name),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
+    gltf_channels = COALESCE(p_gltf_channels, gltf_channels),
+    gltf_samplers = COALESCE(p_gltf_samplers, gltf_samplers),
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
     
+    vircadia_name = COALESCE(p_vircadia_name, vircadia_name),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -1566,33 +1552,33 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_animation(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_animation(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete animation entries';
   END IF;
 
-  DELETE FROM animations WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_animations WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for animations
-CREATE POLICY animations_select_policy ON animations FOR SELECT USING (true);
-CREATE POLICY animations_insert_policy ON animations FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY animations_update_policy ON animations FOR UPDATE USING (is_admin());
-CREATE POLICY animations_delete_policy ON animations FOR DELETE USING (is_admin());
+-- RLS for world_gltf_animations
+CREATE POLICY world_gltf_animations_select_policy ON world_gltf_animations FOR SELECT USING (true);
+CREATE POLICY world_gltf_animations_insert_policy ON world_gltf_animations FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_animations_update_policy ON world_gltf_animations FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_animations_delete_policy ON world_gltf_animations FOR DELETE USING (is_admin());
 
 -- Cameras
 
-CREATE OR REPLACE FUNCTION create_camera(
+CREATE OR REPLACE FUNCTION create_world_gltf_camera(
   p_vircadia_world_uuid UUID,
-  p_orthographic JSONB,
-  p_perspective JSONB,
-  p_type TEXT,
-  p_name TEXT,
-  p_extensions JSONB,
-  p_extras JSONB,
+  p_gltf_orthographic JSONB,
+  p_gltf_perspective JSONB,
+  p_gltf_type TEXT,
+  p_gltf_name TEXT,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_name TEXT,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
@@ -1618,16 +1604,16 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create camera entries';
   END IF;
 
-  INSERT INTO cameras (
-    vircadia_world_uuid, orthographic, perspective, type, name, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
+  INSERT INTO world_gltf_cameras (
+    vircadia_world_uuid, gltf_orthographic, gltf_perspective, gltf_type, gltf_name, gltf_extensions, gltf_extras,
+    vircadia_name, vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
     vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide,
     vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap, vircadia_babylonjs_light_level,
     vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord, vircadia_babylonjs_light_use_as_shadowmap,
     vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_orthographic, p_perspective, p_type, p_name, p_extensions, p_extras,
+    p_vircadia_world_uuid, p_gltf_orthographic, p_gltf_perspective, p_gltf_type, p_gltf_name, p_gltf_extensions, p_gltf_extras,
     p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide,
     p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level,
@@ -1639,14 +1625,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_camera(
+CREATE OR REPLACE FUNCTION update_world_gltf_camera(
   p_vircadia_uuid UUID,
-  p_orthographic JSONB DEFAULT NULL,
-  p_perspective JSONB DEFAULT NULL,
-  p_type TEXT DEFAULT NULL,
-  p_name TEXT DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
+  p_gltf_orthographic JSONB DEFAULT NULL,
+  p_gltf_perspective JSONB DEFAULT NULL,
+  p_gltf_type TEXT DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_name TEXT DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
@@ -1670,15 +1656,15 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update camera entries';
   END IF;
 
-  UPDATE cameras
+  UPDATE world_gltf_cameras
   SET 
-    orthographic = COALESCE(p_orthographic, orthographic),
-    perspective = COALESCE(p_perspective, perspective),
-    type = COALESCE(p_type, type),
-    name = COALESCE(p_name, name),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
-    
+    gltf_orthographic = COALESCE(p_gltf_orthographic, gltf_orthographic),
+    gltf_perspective = COALESCE(p_gltf_perspective, gltf_perspective),
+    gltf_type = COALESCE(p_gltf_type, gltf_type),
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
+    vircadia_name = COALESCE(p_vircadia_name, vircadia_name),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -1698,33 +1684,33 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_camera(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_camera(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete camera entries';
   END IF;
 
-  DELETE FROM cameras WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_cameras WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for cameras
-CREATE POLICY cameras_select_policy ON cameras FOR SELECT USING (true);
-CREATE POLICY cameras_insert_policy ON cameras FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY cameras_update_policy ON cameras FOR UPDATE USING (is_admin());
-CREATE POLICY cameras_delete_policy ON cameras FOR DELETE USING (is_admin());
+-- RLS for world_gltf_cameras
+CREATE POLICY world_gltf_cameras_select_policy ON world_gltf_cameras FOR SELECT USING (true);
+CREATE POLICY world_gltf_cameras_insert_policy ON world_gltf_cameras FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_cameras_update_policy ON world_gltf_cameras FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_cameras_delete_policy ON world_gltf_cameras FOR DELETE USING (is_admin());
 
 -- Skins
 
-CREATE OR REPLACE FUNCTION create_skin(
+CREATE OR REPLACE FUNCTION create_world_gltf_skin(
   p_vircadia_world_uuid UUID,
-  p_inverseBindMatrices TEXT,
-  p_skeleton TEXT,
-  p_joints TEXT[],
-  p_name TEXT,
-  p_extensions JSONB,
-  p_extras JSONB,
+  p_gltf_inverseBindMatrices TEXT,
+  p_gltf_skeleton TEXT,
+  p_gltf_joints TEXT[],
+  p_gltf_name TEXT,
+  p_gltf_extensions JSONB,
+  p_gltf_extras JSONB,
   p_vircadia_name TEXT,
   p_vircadia_version TEXT,
   p_vircadia_babylonjs_lod_mode TEXT,
@@ -1750,16 +1736,16 @@ BEGIN
     RAISE EXCEPTION 'Only admins can create skin entries';
   END IF;
 
-  INSERT INTO skins (
-    vircadia_world_uuid, inverseBindMatrices, skeleton, joints, name, extensions, extras,
-     vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
+  INSERT INTO world_gltf_skins (
+    vircadia_world_uuid, gltf_inverseBindMatrices, gltf_skeleton, gltf_joints, gltf_name, gltf_extensions, gltf_extras,
+    vircadia_name, vircadia_version, vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_auto,
     vircadia_babylonjs_lod_distance, vircadia_babylonjs_lod_size, vircadia_babylonjs_lod_hide,
     vircadia_babylonjs_billboard_mode, vircadia_babylonjs_light_lightmap, vircadia_babylonjs_light_level,
     vircadia_babylonjs_light_color_space, vircadia_babylonjs_light_texcoord, vircadia_babylonjs_light_use_as_shadowmap,
     vircadia_babylonjs_light_mode, vircadia_babylonjs_script_agent_scripts, vircadia_babylonjs_script_persistent_scripts
   )
   VALUES (
-    p_vircadia_world_uuid, p_inverseBindMatrices, p_skeleton, p_joints, p_name, p_extensions, p_extras,
+    p_vircadia_world_uuid, p_gltf_inverseBindMatrices, p_gltf_skeleton, p_gltf_joints, p_gltf_name, p_gltf_extensions, p_gltf_extras,
     p_vircadia_name, p_vircadia_version, p_vircadia_babylonjs_lod_mode, p_vircadia_babylonjs_lod_auto,
     p_vircadia_babylonjs_lod_distance, p_vircadia_babylonjs_lod_size, p_vircadia_babylonjs_lod_hide,
     p_vircadia_babylonjs_billboard_mode, p_vircadia_babylonjs_light_lightmap, p_vircadia_babylonjs_light_level,
@@ -1771,14 +1757,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION update_skin(
+CREATE OR REPLACE FUNCTION update_world_gltf_skin(
   p_vircadia_uuid UUID,
-  p_inverseBindMatrices TEXT DEFAULT NULL,
-  p_skeleton TEXT DEFAULT NULL,
-  p_joints TEXT[] DEFAULT NULL,
-  p_name TEXT DEFAULT NULL,
-  p_extensions JSONB DEFAULT NULL,
-  p_extras JSONB DEFAULT NULL,
+  p_gltf_inverseBindMatrices TEXT DEFAULT NULL,
+  p_gltf_skeleton TEXT DEFAULT NULL,
+  p_gltf_joints TEXT[] DEFAULT NULL,
+  p_gltf_name TEXT DEFAULT NULL,
+  p_gltf_extensions JSONB DEFAULT NULL,
+  p_gltf_extras JSONB DEFAULT NULL,
   p_vircadia_name TEXT DEFAULT NULL,
   p_vircadia_version TEXT DEFAULT NULL,
   p_vircadia_babylonjs_lod_mode TEXT DEFAULT NULL,
@@ -1802,15 +1788,15 @@ BEGIN
     RAISE EXCEPTION 'Only admins can update skin entries';
   END IF;
 
-  UPDATE skins
+  UPDATE world_gltf_skins
   SET 
-    inverseBindMatrices = COALESCE(p_inverseBindMatrices, inverseBindMatrices),
-    skeleton = COALESCE(p_skeleton, skeleton),
-    joints = COALESCE(p_joints, joints),
-    name = COALESCE(p_name, name),
-    extensions = COALESCE(p_extensions, extensions),
-    extras = COALESCE(p_extras, extras),
-    
+    gltf_inverseBindMatrices = COALESCE(p_gltf_inverseBindMatrices, gltf_inverseBindMatrices),
+    gltf_skeleton = COALESCE(p_gltf_skeleton, gltf_skeleton),
+    gltf_joints = COALESCE(p_gltf_joints, gltf_joints),
+    gltf_name = COALESCE(p_gltf_name, gltf_name),
+    gltf_extensions = COALESCE(p_gltf_extensions, gltf_extensions),
+    gltf_extras = COALESCE(p_gltf_extras, gltf_extras),
+    vircadia_name = COALESCE(p_vircadia_name, vircadia_name),
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version),
     vircadia_babylonjs_lod_mode = COALESCE(p_vircadia_babylonjs_lod_mode, vircadia_babylonjs_lod_mode),
     vircadia_babylonjs_lod_auto = COALESCE(p_vircadia_babylonjs_lod_auto, vircadia_babylonjs_lod_auto),
@@ -1830,19 +1816,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION delete_skin(p_vircadia_uuid UUID)
+CREATE OR REPLACE FUNCTION delete_world_gltf_skin(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
   IF NOT is_admin() THEN
     RAISE EXCEPTION 'Only admins can delete skin entries';
   END IF;
 
-  DELETE FROM skins WHERE vircadia_uuid = p_vircadia_uuid;
+  DELETE FROM world_gltf_skins WHERE vircadia_uuid = p_vircadia_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS for skins
-CREATE POLICY skins_select_policy ON skins FOR SELECT USING (true);
-CREATE POLICY skins_insert_policy ON skins FOR INSERT WITH CHECK (is_admin());
-CREATE POLICY skins_update_policy ON skins FOR UPDATE USING (is_admin());
-CREATE POLICY skins_delete_policy ON skins FOR DELETE USING (is_admin());
+-- RLS for world_gltf_skins
+CREATE POLICY world_gltf_skins_select_policy ON world_gltf_skins FOR SELECT USING (true);
+CREATE POLICY world_gltf_skins_insert_policy ON world_gltf_skins FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY world_gltf_skins_update_policy ON world_gltf_skins FOR UPDATE USING (is_admin());
+CREATE POLICY world_gltf_skins_delete_policy ON world_gltf_skins FOR DELETE USING (is_admin());

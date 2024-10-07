@@ -12,21 +12,18 @@
 CREATE TABLE world_gltf (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
 
-    name TEXT NOT NULL,
-    version TEXT NOT NULL,
-    metadata JSONB NOT NULL,
-    defaultScene TEXT,
-    extensionsUsed TEXT[],
-    extensionsRequired TEXT[],
-    extensions JSONB,
-    extras JSONB,
-    asset JSONB NOT NULL,
-
-    -- New properties
-    
     vircadia_version TEXT,
     vircadia_createdat TIMESTAMPTZ DEFAULT NOW(),
-    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW()
+    vircadia_updatedat TIMESTAMPTZ DEFAULT NOW(),
+    vircadia_name TEXT NOT NULL,
+    vircadia_metadata JSONB NOT NULL,
+
+    gltf_extensionsUsed TEXT[],
+    gltf_extensionsRequired TEXT[],
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
+    gltf_asset JSONB NOT NULL,
+    gltf_scene INTEGER  -- This is the index of the default scene
 );
 
 --
@@ -35,15 +32,15 @@ CREATE TABLE world_gltf (
 --
 --
 
--- Create the scenes table
-CREATE TABLE scenes (
+-- Create the world_gltf_scenes table
+CREATE TABLE world_gltf_scenes (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    nodes JSONB,
-    extensions JSONB,
-    extras JSONB,
+    gltf_name TEXT,
+    gltf_nodes JSONB,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -71,23 +68,23 @@ CREATE TABLE scenes (
 --
 --
 
--- Create the nodes table
-CREATE TABLE nodes (
+-- Create the world_gltf_nodes table
+CREATE TABLE world_gltf_nodes (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    camera TEXT,
-    children JSONB,
-    skin TEXT,
-    matrix NUMERIC[16] DEFAULT ARRAY[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
-    mesh TEXT,
-    rotation NUMERIC[4] DEFAULT ARRAY[0,0,0,1],
-    scale NUMERIC[3] DEFAULT ARRAY[1,1,1],
-    translation NUMERIC[3] DEFAULT ARRAY[0,0,0],
-    weights JSONB,
-    extensions JSONB,
-    extras JSONB,
+    gltf_name TEXT,
+    gltf_camera TEXT,
+    gltf_children JSONB,
+    gltf_skin TEXT,
+    gltf_matrix NUMERIC[16] DEFAULT ARRAY[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+    gltf_mesh TEXT,
+    gltf_rotation NUMERIC[4] DEFAULT ARRAY[0,0,0,1],
+    gltf_scale NUMERIC[3] DEFAULT ARRAY[1,1,1],
+    gltf_translation NUMERIC[3] DEFAULT ARRAY[0,0,0],
+    gltf_weights JSONB,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -116,16 +113,16 @@ CREATE TABLE nodes (
 --
 --
 
--- Create the meshes table
-CREATE TABLE meshes (
+-- Create the world_gltf_meshes table
+CREATE TABLE world_gltf_meshes (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    primitives JSONB NOT NULL,
-    weights JSONB,
-    extensions JSONB,
-    extras JSONB,
+    gltf_name TEXT,
+    gltf_primitives JSONB NOT NULL,
+    gltf_weights JSONB,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -154,35 +151,35 @@ CREATE TABLE meshes (
 --
 --
 
--- Create the materials table
-CREATE TABLE materials (
+-- Create the world_gltf_materials table
+CREATE TABLE world_gltf_materials (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    pbrMetallicRoughness JSONB,
-    normalTexture JSONB,
-    occlusionTexture JSONB,
-    emissiveTexture JSONB,
-    emissiveFactor NUMERIC[3] DEFAULT ARRAY[0,0,0],
-    alphaMode TEXT DEFAULT 'OPAQUE',
-    alphaCutoff NUMERIC DEFAULT 0.5,
-    doubleSided BOOLEAN DEFAULT false,
-    extensions JSONB,
-    extras JSONB,
-    CONSTRAINT check_alphamode CHECK (alphaMode IN ('OPAQUE', 'MASK', 'BLEND')),
+    gltf_name TEXT,
+    gltf_pbrMetallicRoughness JSONB,
+    gltf_normalTexture JSONB,
+    gltf_occlusionTexture JSONB,
+    gltf_emissiveTexture JSONB,
+    gltf_emissiveFactor NUMERIC[3] DEFAULT ARRAY[0,0,0],
+    gltf_alphaMode TEXT DEFAULT 'OPAQUE',
+    gltf_alphaCutoff NUMERIC DEFAULT 0.5,
+    gltf_doubleSided BOOLEAN DEFAULT false,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
+    CONSTRAINT check_alphamode CHECK (gltf_alphaMode IN ('OPAQUE', 'MASK', 'BLEND')),
     CONSTRAINT check_pbr_metallic_roughness_structure CHECK (
-        pbrMetallicRoughness IS NULL OR (
-            (pbrMetallicRoughness->>'baseColorFactor' IS NULL OR
-             jsonb_array_length(pbrMetallicRoughness->'baseColorFactor') = 4) AND
-            (pbrMetallicRoughness->>'metallicFactor' IS NULL OR
-             jsonb_typeof(pbrMetallicRoughness->'metallicFactor') = 'number') AND
-            (pbrMetallicRoughness->>'roughnessFactor' IS NULL OR
-             jsonb_typeof(pbrMetallicRoughness->'roughnessFactor') = 'number') AND
-            (pbrMetallicRoughness->>'baseColorTexture' IS NULL OR
-             jsonb_typeof(pbrMetallicRoughness->'baseColorTexture') = 'object') AND
-            (pbrMetallicRoughness->>'metallicRoughnessTexture' IS NULL OR
-             jsonb_typeof(pbrMetallicRoughness->'metallicRoughnessTexture') = 'object')
+        gltf_pbrMetallicRoughness IS NULL OR (
+            (gltf_pbrMetallicRoughness->>'baseColorFactor' IS NULL OR
+             jsonb_array_length(gltf_pbrMetallicRoughness->'baseColorFactor') = 4) AND
+            (gltf_pbrMetallicRoughness->>'metallicFactor' IS NULL OR
+             jsonb_typeof(gltf_pbrMetallicRoughness->'metallicFactor') = 'number') AND
+            (gltf_pbrMetallicRoughness->>'roughnessFactor' IS NULL OR
+             jsonb_typeof(gltf_pbrMetallicRoughness->'roughnessFactor') = 'number') AND
+            (gltf_pbrMetallicRoughness->>'baseColorTexture' IS NULL OR
+             jsonb_typeof(gltf_pbrMetallicRoughness->'baseColorTexture') = 'object') AND
+            (gltf_pbrMetallicRoughness->>'metallicRoughnessTexture' IS NULL OR
+             jsonb_typeof(gltf_pbrMetallicRoughness->'metallicRoughnessTexture') = 'object')
         )
     ),
 
@@ -213,16 +210,16 @@ CREATE TABLE materials (
 --
 --
 
--- Create the textures table
-CREATE TABLE textures (
+-- Create the world_gltf_textures table
+CREATE TABLE world_gltf_textures (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    sampler TEXT,
-    source TEXT,
-    extensions JSONB,
-    extras JSONB,
+    gltf_name TEXT,
+    gltf_sampler TEXT,
+    gltf_source TEXT,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -251,17 +248,17 @@ CREATE TABLE textures (
 --
 --
 
--- Create the images table
-CREATE TABLE images (
+-- Create the world_gltf_images table
+CREATE TABLE world_gltf_images (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    uri TEXT,
-    mimeType TEXT,
-    bufferView TEXT,
-    extensions JSONB,
-    extras JSONB,
+    gltf_name TEXT,
+    gltf_uri TEXT,
+    gltf_mimeType TEXT,
+    gltf_bufferView TEXT,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -290,18 +287,18 @@ CREATE TABLE images (
 --
 --
 
--- Create the samplers table
-CREATE TABLE samplers (
+-- Create the world_gltf_samplers table
+CREATE TABLE world_gltf_samplers (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    magFilter TEXT,
-    minFilter TEXT,
-    wrapS TEXT,
-    wrapT TEXT,
-    extensions JSONB,
-    extras JSONB,
+    gltf_name TEXT,
+    gltf_magFilter TEXT,
+    gltf_minFilter TEXT,
+    gltf_wrapS TEXT,
+    gltf_wrapT TEXT,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -330,16 +327,16 @@ CREATE TABLE samplers (
 --
 --
 
--- Create the buffers table
-CREATE TABLE buffers (
+-- Create the world_gltf_buffers table
+CREATE TABLE world_gltf_buffers (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    uri TEXT,
-    byteLength INTEGER NOT NULL,
-    extensions JSONB,
-    extras JSONB,
+    gltf_name TEXT,
+    gltf_uri TEXT,
+    gltf_byteLength INTEGER NOT NULL,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -368,19 +365,19 @@ CREATE TABLE buffers (
 --
 --
 
--- Create the buffer_views table
-CREATE TABLE buffer_views (
+-- Create the world_gltf_buffer_views table
+CREATE TABLE world_gltf_buffer_views (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    buffer TEXT NOT NULL,
-    byteOffset INTEGER DEFAULT 0,
-    byteLength INTEGER NOT NULL,
-    byteStride INTEGER,
-    target TEXT,
-    name TEXT,
-    extensions JSONB,
-    extras JSONB,
+    gltf_buffer TEXT NOT NULL,
+    gltf_byteOffset INTEGER DEFAULT 0,
+    gltf_byteLength INTEGER NOT NULL,
+    gltf_byteStride INTEGER,
+    gltf_target TEXT,
+    gltf_name TEXT,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -409,23 +406,23 @@ CREATE TABLE buffer_views (
 --
 --
 
--- Create the accessors table
-CREATE TABLE accessors (
+-- Create the world_gltf_accessors table
+CREATE TABLE world_gltf_accessors (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    bufferView TEXT,
-    byteOffset INTEGER DEFAULT 0,
-    componentType INTEGER NOT NULL,
-    normalized BOOLEAN DEFAULT false,
-    count INTEGER NOT NULL,
-    type TEXT NOT NULL,
-    max JSONB,
-    min JSONB,
-    name TEXT,
-    sparse JSONB,
-    extensions JSONB,
-    extras JSONB,
+    gltf_bufferView TEXT,
+    gltf_byteOffset INTEGER DEFAULT 0,
+    gltf_componentType INTEGER NOT NULL,
+    gltf_normalized BOOLEAN DEFAULT false,
+    gltf_count INTEGER NOT NULL,
+    gltf_type TEXT NOT NULL,
+    gltf_max JSONB,
+    gltf_min JSONB,
+    gltf_name TEXT,
+    gltf_sparse JSONB,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -454,16 +451,16 @@ CREATE TABLE accessors (
 --
 --
 
--- Create the animations table
-CREATE TABLE animations (
+-- Create the world_gltf_animations table
+CREATE TABLE world_gltf_animations (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    channels JSONB NOT NULL,
-    samplers JSONB NOT NULL,
-    extensions JSONB,
-    extras JSONB,
+    gltf_name TEXT,
+    gltf_channels JSONB NOT NULL,
+    gltf_samplers JSONB NOT NULL,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -492,17 +489,17 @@ CREATE TABLE animations (
 --
 --
 
--- Create the skins table
-CREATE TABLE skins (
+-- Create the world_gltf_skins table
+CREATE TABLE world_gltf_skins (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    inverseBindMatrices TEXT,
-    skeleton TEXT,
-    joints JSONB NOT NULL,
-    extensions JSONB,
-    extras JSONB,
+    gltf_name TEXT,
+    gltf_inverseBindMatrices TEXT,
+    gltf_skeleton TEXT,
+    gltf_joints JSONB NOT NULL,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -531,17 +528,17 @@ CREATE TABLE skins (
 --
 --
 
--- Create the cameras table
-CREATE TABLE cameras (
+-- Create the world_gltf_cameras table
+CREATE TABLE world_gltf_cameras (
     vircadia_uuid UUID UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
     vircadia_world_uuid UUID NOT NULL REFERENCES world_gltf(vircadia_uuid),
 
-    name TEXT,
-    type TEXT NOT NULL,
-    orthographic JSONB,
-    perspective JSONB,
-    extensions JSONB,
-    extras JSONB,
+    gltf_name TEXT,
+    gltf_type TEXT NOT NULL,
+    gltf_orthographic JSONB,
+    gltf_perspective JSONB,
+    gltf_extensions JSONB,
+    gltf_extras JSONB,
 
     -- New properties
     
@@ -584,103 +581,102 @@ CREATE TRIGGER update_world_gltf_modtime
 BEFORE UPDATE ON world_gltf
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_scenes_modtime
-BEFORE UPDATE ON scenes
+CREATE TRIGGER update_world_gltf_scenes_modtime
+BEFORE UPDATE ON world_gltf_scenes
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_nodes_modtime
-BEFORE UPDATE ON nodes
+CREATE TRIGGER update_world_gltf_nodes_modtime
+BEFORE UPDATE ON world_gltf_nodes
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_meshes_modtime
-BEFORE UPDATE ON meshes
+CREATE TRIGGER update_world_gltf_meshes_modtime
+BEFORE UPDATE ON world_gltf_meshes
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_materials_modtime
-BEFORE UPDATE ON materials
+CREATE TRIGGER update_world_gltf_materials_modtime
+BEFORE UPDATE ON world_gltf_materials
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_textures_modtime
-BEFORE UPDATE ON textures
+CREATE TRIGGER update_world_gltf_textures_modtime
+BEFORE UPDATE ON world_gltf_textures
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_images_modtime
-BEFORE UPDATE ON images
+CREATE TRIGGER update_world_gltf_images_modtime
+BEFORE UPDATE ON world_gltf_images
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_samplers_modtime
-BEFORE UPDATE ON samplers
+CREATE TRIGGER update_world_gltf_samplers_modtime
+BEFORE UPDATE ON world_gltf_samplers
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_buffers_modtime
-BEFORE UPDATE ON buffers
+CREATE TRIGGER update_world_gltf_buffers_modtime
+BEFORE UPDATE ON world_gltf_buffers
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_buffer_views_modtime
-BEFORE UPDATE ON buffer_views
+CREATE TRIGGER update_world_gltf_buffer_views_modtime
+BEFORE UPDATE ON world_gltf_buffer_views
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_accessors_modtime
-BEFORE UPDATE ON accessors
+CREATE TRIGGER update_world_gltf_accessors_modtime
+BEFORE UPDATE ON world_gltf_accessors
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_animations_modtime
-BEFORE UPDATE ON animations
+CREATE TRIGGER update_world_gltf_animations_modtime
+BEFORE UPDATE ON world_gltf_animations
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_cameras_modtime
-BEFORE UPDATE ON cameras
+CREATE TRIGGER update_world_gltf_cameras_modtime
+BEFORE UPDATE ON world_gltf_cameras
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
-CREATE TRIGGER update_skins_modtime
-BEFORE UPDATE ON skins
+CREATE TRIGGER update_world_gltf_skins_modtime
+BEFORE UPDATE ON world_gltf_skins
 FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
 
 -- Enable RLS for all tables
 ALTER TABLE agent_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE world_gltf ENABLE ROW LEVEL SECURITY;
-ALTER TABLE scenes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE nodes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE meshes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE materials ENABLE ROW LEVEL SECURITY;
-ALTER TABLE textures ENABLE ROW LEVEL SECURITY;
-ALTER TABLE images ENABLE ROW LEVEL SECURITY;
-ALTER TABLE samplers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE buffers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE buffer_views ENABLE ROW LEVEL SECURITY;
-ALTER TABLE accessors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE animations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE skins ENABLE ROW LEVEL SECURITY;
-ALTER TABLE cameras ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_scenes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_nodes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_meshes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_materials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_textures ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_samplers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_buffers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_buffer_views ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_accessors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_animations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_skins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gltf_cameras ENABLE ROW LEVEL SECURITY;
 
 -- Enable Realtime for all tables
 ALTER PUBLICATION supabase_realtime
-ADD TABLE world_gltf, scenes, nodes, meshes, materials, textures,
-          images, samplers, animations, skins, cameras, buffers,
-          buffer_views, accessors;
+ADD TABLE world_gltf, world_gltf_scenes, world_gltf_nodes, world_gltf_meshes, world_gltf_materials, world_gltf_textures,
+          world_gltf_images, world_gltf_samplers, world_gltf_animations, world_gltf_skins, world_gltf_cameras, world_gltf_buffers,
+          world_gltf_buffer_views, world_gltf_accessors;
 
 -- Add indexes for better query performance
-CREATE INDEX idx_worlds_gltf_name ON world_gltf(name);
-CREATE INDEX idx_scenes_name ON scenes(name);
-CREATE INDEX idx_nodes_name ON nodes(name);
-CREATE INDEX idx_meshes_name ON meshes(name);
-CREATE INDEX idx_materials_name ON materials(name);
-CREATE INDEX idx_textures_name ON textures(name);
-CREATE INDEX idx_images_name ON images(name);
-CREATE INDEX idx_samplers_name ON samplers(name);
-CREATE INDEX idx_animations_name ON animations(name);
-CREATE INDEX idx_skins_name ON skins(name);
-CREATE INDEX idx_cameras_name ON cameras(name);
-CREATE INDEX idx_buffers_name ON buffers(name);
-CREATE INDEX idx_buffer_views_name ON buffer_views(name);
-CREATE INDEX idx_accessors_name ON accessors(name);
+CREATE INDEX idx_world_gltf_scenes_gltf_name ON world_gltf_scenes(gltf_name);
+CREATE INDEX idx_world_gltf_nodes_gltf_name ON world_gltf_nodes(gltf_name);
+CREATE INDEX idx_world_gltf_meshes_gltf_name ON world_gltf_meshes(gltf_name);
+CREATE INDEX idx_world_gltf_materials_gltf_name ON world_gltf_materials(gltf_name);
+CREATE INDEX idx_world_gltf_textures_gltf_name ON world_gltf_textures(gltf_name);
+CREATE INDEX idx_world_gltf_images_gltf_name ON world_gltf_images(gltf_name);
+CREATE INDEX idx_world_gltf_samplers_gltf_name ON world_gltf_samplers(gltf_name);
+CREATE INDEX idx_world_gltf_animations_gltf_name ON world_gltf_animations(gltf_name);
+CREATE INDEX idx_world_gltf_skins_gltf_name ON world_gltf_skins(gltf_name);
+CREATE INDEX idx_world_gltf_cameras_gltf_name ON world_gltf_cameras(gltf_name);
+CREATE INDEX idx_world_gltf_buffers_gltf_name ON world_gltf_buffers(gltf_name);
+CREATE INDEX idx_world_gltf_buffer_views_gltf_name ON world_gltf_buffer_views(gltf_name);
+CREATE INDEX idx_world_gltf_accessors_gltf_name ON world_gltf_accessors(gltf_name);
 
 -- Add GIN indexes for JSONB columns to improve query performance on these fields
-CREATE INDEX idx_worlds_gltf_extensions ON world_gltf USING GIN (extensions);
-CREATE INDEX idx_scenes_nodes ON scenes USING GIN (nodes);
-CREATE INDEX idx_meshes_primitives ON meshes USING GIN (primitives);
-CREATE INDEX idx_materials_pbr_metallic_roughness ON materials USING GIN (pbrMetallicRoughness);
-CREATE INDEX idx_animations_channels ON animations USING GIN (channels);
-CREATE INDEX idx_animations_samplers ON animations USING GIN (samplers);
-CREATE INDEX idx_skins_joints ON skins USING GIN (joints);
-CREATE INDEX idx_accessors_sparse ON accessors USING GIN (sparse);
+CREATE INDEX idx_worlds_gltf_gltf_extensions ON world_gltf USING GIN (gltf_extensions);
+CREATE INDEX idx_world_gltf_scenes_gltf_nodes ON world_gltf_scenes USING GIN (gltf_nodes);
+CREATE INDEX idx_world_gltf_meshes_gltf_primitives ON world_gltf_meshes USING GIN (gltf_primitives);
+CREATE INDEX idx_world_gltf_materials_gltf_pbr_metallic_roughness ON world_gltf_materials USING GIN (gltf_pbrMetallicRoughness);
+CREATE INDEX idx_world_gltf_animations_gltf_channels ON world_gltf_animations USING GIN (gltf_channels);
+CREATE INDEX idx_world_gltf_animations_gltf_samplers ON world_gltf_animations USING GIN (gltf_samplers);
+CREATE INDEX idx_world_gltf_skins_gltf_joints ON world_gltf_skins USING GIN (gltf_joints);
+CREATE INDEX idx_world_gltf_accessors_gltf_sparse ON world_gltf_accessors USING GIN (gltf_sparse);
