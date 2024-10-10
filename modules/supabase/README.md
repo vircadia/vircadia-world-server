@@ -22,3 +22,15 @@ may declare environment variables for the following:
 - `S3_REGION` (if using OrioleDB with S3)
 - `S3_ACCESS_KEY` (if using OrioleDB with S3)
 - `S3_SECRET_KEY` (if using OrioleDB with S3)
+
+## Maintenance
+
+If you need to reset the database, all the data, and its structure, you can use
+the following command:
+
+```bash
+supabase --workdir $PWD db reset
+```
+
+Be careful with this command, as it will delete all existing data and cannot be
+reversed.

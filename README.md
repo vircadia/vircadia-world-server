@@ -43,3 +43,9 @@ brew install caddy
 ```bash
 sudo apt install caddy
 ```
+
+## Running
+
+```bash
+deno task dev
+```
