@@ -21,7 +21,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_metadata(
   p_metadata_id UUID,
@@ -46,7 +46,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -57,7 +57,7 @@ BEGIN
 
   DELETE FROM world_gltf_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Scenes Metadata
 
@@ -82,7 +82,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_scene_metadata(
   p_metadata_id UUID,
@@ -107,7 +107,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_scene_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -118,7 +118,7 @@ BEGIN
 
   DELETE FROM world_gltf_scenes_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Nodes Metadata
 
@@ -143,7 +143,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_node_metadata(
   p_metadata_id UUID,
@@ -168,7 +168,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_node_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -179,7 +179,7 @@ BEGIN
 
   DELETE FROM world_gltf_nodes_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Meshes Metadata
 
@@ -204,7 +204,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_mesh_metadata(
   p_metadata_id UUID,
@@ -229,7 +229,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_mesh_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -240,7 +240,7 @@ BEGIN
 
   DELETE FROM world_gltf_meshes_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Materials Metadata
 
@@ -265,7 +265,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_material_metadata(
   p_metadata_id UUID,
@@ -290,7 +290,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_material_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -301,7 +301,7 @@ BEGIN
 
   DELETE FROM world_gltf_materials_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Textures Metadata
 
@@ -326,7 +326,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_texture_metadata(
   p_metadata_id UUID,
@@ -351,7 +351,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_texture_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -362,7 +362,7 @@ BEGIN
 
   DELETE FROM world_gltf_textures_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Images Metadata
 
@@ -387,7 +387,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_image_metadata(
   p_metadata_id UUID,
@@ -412,7 +412,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_image_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -423,7 +423,7 @@ BEGIN
 
   DELETE FROM world_gltf_images_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Samplers Metadata
 
@@ -448,7 +448,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_sampler_metadata(
   p_metadata_id UUID,
@@ -473,7 +473,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_sampler_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -484,7 +484,7 @@ BEGIN
 
   DELETE FROM world_gltf_samplers_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Buffers Metadata
 
@@ -509,7 +509,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_buffer_metadata(
   p_metadata_id UUID,
@@ -534,7 +534,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_buffer_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -545,7 +545,7 @@ BEGIN
 
   DELETE FROM world_gltf_buffers_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Buffer Views Metadata
 
@@ -570,7 +570,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_buffer_view_metadata(
   p_metadata_id UUID,
@@ -595,7 +595,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_buffer_view_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -606,7 +606,7 @@ BEGIN
 
   DELETE FROM world_gltf_buffer_views_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Accessors Metadata
 
@@ -631,7 +631,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_accessor_metadata(
   p_metadata_id UUID,
@@ -656,7 +656,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_accessor_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -667,7 +667,7 @@ BEGIN
 
   DELETE FROM world_gltf_accessors_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Animations Metadata
 
@@ -692,7 +692,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_animation_metadata(
   p_metadata_id UUID,
@@ -717,7 +717,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_animation_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -728,7 +728,7 @@ BEGIN
 
   DELETE FROM world_gltf_animations_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Skins Metadata
 
@@ -753,7 +753,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_skin_metadata(
   p_metadata_id UUID,
@@ -778,7 +778,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_skin_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -789,7 +789,7 @@ BEGIN
 
   DELETE FROM world_gltf_skins_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Cameras Metadata
 
@@ -814,7 +814,7 @@ BEGIN
   RETURNING metadata_id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_camera_metadata(
   p_metadata_id UUID,
@@ -839,7 +839,7 @@ BEGIN
     values_timestamp = COALESCE(p_values_timestamp, values_timestamp)
   WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_camera_metadata(p_metadata_id UUID)
 RETURNS VOID AS $$
@@ -850,7 +850,7 @@ BEGIN
 
   DELETE FROM world_gltf_cameras_metadata WHERE metadata_id = p_metadata_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- World GLTF Metadata RLS
 CREATE POLICY world_gltf_metadata_select_policy ON world_gltf_metadata 

@@ -574,7 +574,7 @@ BEGIN
     NEW.vircadia_updatedat = now();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Apply the trigger to all tables with vircadia_updatedat column
 CREATE TRIGGER update_world_gltf_modtime

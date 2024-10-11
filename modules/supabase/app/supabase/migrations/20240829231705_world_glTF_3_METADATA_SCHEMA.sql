@@ -262,7 +262,7 @@ BEGIN
     NEW.updatedat = now();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Create indexes for better query performance using GIN for array columns
 CREATE INDEX idx_world_gltf_metadata_lookup ON world_gltf_metadata (world_gltf_id, key, values_text, values_numeric, values_boolean, values_timestamp);

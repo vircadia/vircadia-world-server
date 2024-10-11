@@ -25,7 +25,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf(
   p_vircadia_uuid UUID,
@@ -60,7 +60,7 @@ BEGIN
     vircadia_version = COALESCE(p_vircadia_version, vircadia_version)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -71,7 +71,7 @@ BEGIN
 
   DELETE FROM world_gltf WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf
 CREATE POLICY world_gltf_select_policy ON world_gltf FOR SELECT USING (true);
@@ -135,7 +135,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_scene(
   p_vircadia_uuid UUID,
@@ -186,7 +186,7 @@ BEGIN
     vircadia_babylonjs_scene_autoAnimateSpeed = COALESCE(p_vircadia_babylonjs_scene_autoAnimateSpeed, vircadia_babylonjs_scene_autoAnimateSpeed)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_scene(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -197,7 +197,7 @@ BEGIN
 
   DELETE FROM world_gltf_scenes WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_scenes
 CREATE POLICY world_gltf_scenes_select_policy ON world_gltf_scenes FOR SELECT USING (true);
@@ -264,7 +264,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_node(
   p_vircadia_uuid UUID,
@@ -333,7 +333,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_node(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -344,7 +344,7 @@ BEGIN
 
   DELETE FROM world_gltf_nodes WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_nodes
 CREATE POLICY world_gltf_nodes_select_policy ON world_gltf_nodes FOR SELECT USING (true);
@@ -404,7 +404,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_mesh(
   p_vircadia_uuid UUID,
@@ -459,7 +459,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_mesh(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -470,7 +470,7 @@ BEGIN
 
   DELETE FROM world_gltf_meshes WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_meshes
 CREATE POLICY world_gltf_meshes_select_policy ON world_gltf_meshes FOR SELECT USING (true);
@@ -538,7 +538,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_material(
   p_vircadia_uuid UUID,
@@ -605,7 +605,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_material(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -616,7 +616,7 @@ BEGIN
 
   DELETE FROM world_gltf_materials WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_materials
 CREATE POLICY world_gltf_materials_select_policy ON world_gltf_materials FOR SELECT USING (true);
@@ -676,7 +676,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_texture(
   p_vircadia_uuid UUID,
@@ -731,7 +731,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_texture(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -742,7 +742,7 @@ BEGIN
 
   DELETE FROM world_gltf_textures WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_textures
 CREATE POLICY world_gltf_textures_select_policy ON world_gltf_textures FOR SELECT USING (true);
@@ -804,7 +804,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_image(
   p_vircadia_uuid UUID,
@@ -864,7 +864,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_image(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -875,7 +875,7 @@ BEGIN
 
   DELETE FROM world_gltf_images WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_images
 CREATE POLICY world_gltf_images_select_policy ON world_gltf_images FOR SELECT USING (true);
@@ -938,7 +938,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_sampler(
   p_vircadia_uuid UUID,
@@ -1000,7 +1000,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_sampler(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -1011,7 +1011,7 @@ BEGIN
 
   DELETE FROM world_gltf_samplers WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_samplers
 CREATE POLICY world_gltf_samplers_select_policy ON world_gltf_samplers FOR SELECT USING (true);
@@ -1072,7 +1072,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_buffer(
   p_vircadia_uuid UUID,
@@ -1130,7 +1130,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_buffer(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -1141,7 +1141,7 @@ BEGIN
 
   DELETE FROM world_gltf_buffers WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_buffers
 CREATE POLICY world_gltf_buffers_select_policy ON world_gltf_buffers FOR SELECT USING (true);
@@ -1205,7 +1205,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_buffer_view(
   p_vircadia_uuid UUID,
@@ -1268,7 +1268,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_buffer_view(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -1279,7 +1279,7 @@ BEGIN
 
   DELETE FROM world_gltf_buffer_views WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_buffer_views
 CREATE POLICY world_gltf_buffer_views_select_policy ON world_gltf_buffer_views FOR SELECT USING (true);
@@ -1349,7 +1349,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_accessor(
   p_vircadia_uuid UUID,
@@ -1420,7 +1420,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_accessor(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -1431,7 +1431,7 @@ BEGIN
 
   DELETE FROM world_gltf_accessors WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_accessors
 CREATE POLICY world_gltf_accessors_select_policy ON world_gltf_accessors FOR SELECT USING (true);
@@ -1492,7 +1492,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_animation(
   p_vircadia_uuid UUID,
@@ -1550,7 +1550,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_animation(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -1561,7 +1561,7 @@ BEGIN
 
   DELETE FROM world_gltf_animations WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_animations
 CREATE POLICY world_gltf_animations_select_policy ON world_gltf_animations FOR SELECT USING (true);
@@ -1623,7 +1623,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_camera(
   p_vircadia_uuid UUID,
@@ -1682,7 +1682,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_camera(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -1693,7 +1693,7 @@ BEGIN
 
   DELETE FROM world_gltf_cameras WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_cameras
 CREATE POLICY world_gltf_cameras_select_policy ON world_gltf_cameras FOR SELECT USING (true);
@@ -1755,7 +1755,7 @@ BEGIN
   RETURNING vircadia_uuid INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_world_gltf_skin(
   p_vircadia_uuid UUID,
@@ -1814,7 +1814,7 @@ BEGIN
     vircadia_babylonjs_script_persistent_scripts = COALESCE(p_vircadia_babylonjs_script_persistent_scripts, vircadia_babylonjs_script_persistent_scripts)
   WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_world_gltf_skin(p_vircadia_uuid UUID)
 RETURNS VOID AS $$
@@ -1825,7 +1825,7 @@ BEGIN
 
   DELETE FROM world_gltf_skins WHERE vircadia_uuid = p_vircadia_uuid;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for world_gltf_skins
 CREATE POLICY world_gltf_skins_select_policy ON world_gltf_skins FOR SELECT USING (true);

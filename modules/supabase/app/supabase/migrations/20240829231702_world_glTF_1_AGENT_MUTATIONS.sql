@@ -4,7 +4,7 @@ RETURNS BOOLEAN AS $$
 BEGIN
   RETURN (SELECT role = 'admin' FROM agent_profiles WHERE id = auth.uid());
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Function to check if the current agent is a member
 CREATE OR REPLACE FUNCTION is_member()
@@ -12,7 +12,7 @@ RETURNS BOOLEAN AS $$
 BEGIN
   RETURN (SELECT role = 'member' FROM agent_profiles WHERE id = auth.uid());
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Function to check if the current agent is a guest
 CREATE OR REPLACE FUNCTION is_guest()
@@ -20,7 +20,7 @@ RETURNS BOOLEAN AS $$
 BEGIN
   RETURN (SELECT role = 'guest' FROM agent_profiles WHERE id = auth.uid());
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Agent Profiles
 
@@ -38,7 +38,7 @@ BEGIN
   RETURNING id INTO new_id;
   RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION update_agent_profile(
   p_username TEXT DEFAULT NULL,
@@ -54,14 +54,14 @@ BEGIN
     role = COALESCE(p_role, role)
   WHERE id = auth.uid();
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION delete_agent_profile()
 RETURNS VOID AS $$
 BEGIN
   DELETE FROM agent_profiles WHERE id = auth.uid();
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- RLS for agent_profiles
 CREATE POLICY agent_profiles_select_policy ON agent_profiles FOR SELECT USING (true);
