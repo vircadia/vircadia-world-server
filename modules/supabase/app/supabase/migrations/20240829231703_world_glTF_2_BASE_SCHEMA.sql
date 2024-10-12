@@ -103,8 +103,12 @@ CREATE TABLE world_gltf_nodes (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -141,8 +145,12 @@ CREATE TABLE world_gltf_meshes (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -200,8 +208,12 @@ CREATE TABLE world_gltf_materials (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -238,8 +250,12 @@ CREATE TABLE world_gltf_textures (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -277,8 +293,12 @@ CREATE TABLE world_gltf_images (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -317,8 +337,12 @@ CREATE TABLE world_gltf_samplers (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -355,8 +379,12 @@ CREATE TABLE world_gltf_buffers (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -396,8 +424,12 @@ CREATE TABLE world_gltf_buffer_views (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -441,8 +473,12 @@ CREATE TABLE world_gltf_accessors (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -479,8 +515,12 @@ CREATE TABLE world_gltf_animations (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -518,8 +558,12 @@ CREATE TABLE world_gltf_skins (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 --
@@ -557,8 +601,12 @@ CREATE TABLE world_gltf_cameras (
     vircadia_babylonjs_light_texcoord INTEGER,
     vircadia_babylonjs_light_use_as_shadowmap BOOLEAN,
     vircadia_babylonjs_light_mode TEXT,
-    vircadia_babylonjs_script_agent_scripts TEXT[],
-    vircadia_babylonjs_script_persistent_scripts TEXT[]
+    vircadia_babylonjs_script_agent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_agent_script_git_repo_url TEXT,
+    vircadia_babylonjs_script_persistent_script_raw_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_file_url TEXT,
+    vircadia_babylonjs_script_persistent_script_git_repo_url TEXT
 );
 
 
