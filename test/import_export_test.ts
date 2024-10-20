@@ -7,6 +7,9 @@ Deno.test("glTF import, combine, and export test", async () => {
     const document = new Document();
     const scene = document.createScene();
 
+    // Create a Buffer
+    const buffer = document.createBuffer();
+
     // Create a root node
     const rootNode = document.createNode("Root");
     scene.addChild(rootNode);
@@ -23,20 +26,28 @@ Deno.test("glTF import, combine, and export test", async () => {
     // Create input accessor
     const inputAccessor = document.createAccessor("inputAccessor")
         .setArray(new Float32Array([0]))
-        .setType(Accessor.Type.SCALAR);
+        .setType(Accessor.Type.SCALAR)
+        .setBuffer(buffer); // Associate with the Buffer
     animationSampler.setInput(inputAccessor);
 
     // Create output accessor
     const outputAccessor = document.createAccessor("outputAccessor")
         .setArray(new Float32Array([0, 0, 0]))
-        .setType(Accessor.Type.VEC3);
+        .setType(Accessor.Type.VEC3)
+        .setBuffer(buffer); // Associate with the Buffer
     animationSampler.setOutput(outputAccessor);
 
     // Create and add a camera
-    const camera = document.createCamera("TestCamera");
-    camera.setPerspective(45, 16 / 9, 0.1, 100);
-    const cameraNode = document.createNode("CameraNode");
-    cameraNode.setCamera(camera);
+    const camera = document.createCamera("TestCamera")
+        .setType("perspective")
+        .setZNear(0.1)
+        .setZFar(100)
+        .setYFov(45 * Math.PI / 180)
+        .setAspectRatio(16 / 9);
+
+    const cameraNode = document.createNode("CameraNode")
+        .setCamera(camera);
+
     rootNode.addChild(cameraNode);
 
     // Create and add a child node
@@ -49,10 +60,33 @@ Deno.test("glTF import, combine, and export test", async () => {
 
     // Create a new document to combine elements
     const combinedDocument = new Document();
-    combinedDocument.createScene();
+    const combinedScene = combinedDocument.createScene();
 
     // Import elements from the original document
-    await combinedDocument.import(document);
+    // Instead of using combinedDocument.import(document), we'll copy elements manually
+    document.getRoot().listAnimations().forEach((animation) => {
+        combinedDocument.createAnimation(animation.getName())
+            .copy(animation);
+    });
+
+    document.getRoot().listCameras().forEach((camera) => {
+        combinedDocument.createCamera(camera.getName())
+            .copy(camera);
+    });
+
+    document.getRoot().listNodes().forEach((node) => {
+        const newNode = combinedDocument.createNode(node.getName());
+        newNode.copy(node);
+        if (node.getParentNode()) {
+            const parentName = node.getParentNode()?.getName();
+            const newParent = combinedDocument.getRoot().listNodes().find((n) =>
+                n.getName() === parentName
+            );
+            if (newParent) newParent.addChild(newNode);
+        } else {
+            combinedScene.addChild(newNode);
+        }
+    });
 
     // Optimize the combined document
     await combinedDocument.transform(
