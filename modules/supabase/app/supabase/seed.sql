@@ -46,7 +46,7 @@ BEGIN
         ''
     ) RETURNING id INTO admin_uuid;
 
-    -- Update the user_profiles table to set the admin role
+    -- Update the agent_profiles table to set the admin role
     UPDATE public.agent_profiles
     SET role = 'admin'
     WHERE id = admin_uuid;
@@ -60,12 +60,6 @@ BEGIN
     RAISE NOTICE 'IMPORTANT: Remember to change the default admin password after first login!';
 END $$;
 
--- Insert default permissions for existing roles
-INSERT INTO role_permissions (role, read, write, execute) VALUES
-('guest', true, false, false),
-('member', true, true, false),
-('admin', true, true, true);
-
 -- Add the root "seed" entity
 INSERT INTO entities (
     general__uuid,
@@ -73,7 +67,10 @@ INSERT INTO entities (
     general__type,
     general__semantic_version,
     general__transform,
-    babylonjs__script_persistent_scripts
+    babylonjs__script_persistent_scripts,
+    permissions__read,
+    permissions__write,
+    permissions__execute
 ) VALUES (
     '00000000-0000-0000-0000-000000000001',
     'World Seed Entity',
@@ -86,5 +83,8 @@ INSERT INTO entities (
             'scripts/world-seed-script.js',
             'https://github.com/your-org/world-scripts'
         )::script_source
-    ]
+    ],
+    ARRAY['*'],  -- All roles can read
+    ARRAY['admin'],  -- Only admin can write
+    ARRAY['admin']  -- Only admin can execute
 );

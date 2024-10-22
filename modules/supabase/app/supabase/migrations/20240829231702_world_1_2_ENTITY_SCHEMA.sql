@@ -247,25 +247,7 @@ CREATE INDEX idx_entities_include_only_mesh_ids ON entities USING GIN (babylonjs
 CREATE INDEX idx_entities_type_parent ON entities(general__type, general__parent_entity_id);
 CREATE INDEX idx_entities_type_created_at ON entities(general__type, general__created_at);
 
--- RLS for entities
-ALTER TABLE entities ENABLE ROW LEVEL SECURITY;
-
--- Policy for select: Allow authenticated users to read entities based on their role
-CREATE POLICY entities_select_policy ON entities
-    FOR SELECT USING (can_read(general__uuid));
-
--- Policy for insert: Allow authenticated users to insert entities if they have write permission
-CREATE POLICY entities_insert_policy ON entities
-    FOR INSERT WITH CHECK (can_write(general__uuid));
-
--- Policy for update: Allow authenticated users to update entities if they have write permission
-CREATE POLICY entities_update_policy ON entities
-    FOR UPDATE USING (can_write(general__uuid));
-
--- Policy for delete: Allow authenticated users to delete entities if they have write permission
-CREATE POLICY entities_delete_policy ON entities
-    FOR DELETE USING (can_write(general__uuid));
-
+-- Move these function definitions before the policy creations
 -- Functions to check permissions
 
 CREATE OR REPLACE FUNCTION can_read(entity_id UUID)
@@ -300,3 +282,109 @@ BEGIN
          '*' = ANY(SELECT permissions__execute FROM entities WHERE general__uuid = entity_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- RLS for entities
+ALTER TABLE entities ENABLE ROW LEVEL SECURITY;
+
+-- Now create the policies using the functions we just defined
+-- Policy for select: Allow authenticated users to read entities based on their role
+CREATE POLICY entities_select_policy ON entities
+    FOR SELECT USING (can_read(general__uuid));
+
+-- Policy for insert: Allow authenticated users to insert entities if they have write permission
+CREATE POLICY entities_insert_policy ON entities
+    FOR INSERT WITH CHECK (can_write(general__uuid));
+
+-- Policy for update: Allow authenticated users to update entities if they have write permission
+CREATE POLICY entities_update_policy ON entities
+    FOR UPDATE USING (can_write(general__uuid));
+
+-- Policy for delete: Allow authenticated users to delete entities if they have write permission
+CREATE POLICY entities_delete_policy ON entities
+    FOR DELETE USING (can_write(general__uuid));
+
+-- ENTITIES METADATA
+CREATE TABLE entities_metadata (
+    metadata_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    entity_id UUID NOT NULL REFERENCES entities(general__uuid) ON DELETE CASCADE,
+    key TEXT NOT NULL,
+    values_text TEXT[],
+    values_numeric NUMERIC[],
+    values_boolean BOOLEAN[],
+    values_timestamp TIMESTAMPTZ[],
+    createdat TIMESTAMPTZ DEFAULT NOW(),
+    updatedat TIMESTAMPTZ DEFAULT NOW(),
+    permissions__read TEXT[],
+    permissions__write TEXT[],
+    permissions__execute TEXT[],
+    UNIQUE (entity_id, key)
+);
+
+-- Create indexes for better query performance using GIN for array columns
+CREATE INDEX idx_entities_metadata_lookup ON entities_metadata (entity_id, key, values_text, values_numeric, values_boolean, values_timestamp);
+
+-- Apply the trigger to all metadata tables
+CREATE TRIGGER update_entities_metadata_modtime
+BEFORE UPDATE ON entities_metadata
+FOR EACH ROW EXECUTE FUNCTION update_base_table_modified_column();
+
+-- Enable RLS for all metadata tables
+ALTER TABLE entities_metadata ENABLE ROW LEVEL SECURITY;
+
+-- Enable Realtime for all metadata tables
+ALTER PUBLICATION supabase_realtime ADD TABLE entities_metadata;
+
+-- Functions to check permissions for entities_metadata
+
+CREATE OR REPLACE FUNCTION can_read_metadata(metadata_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  user_role TEXT;
+BEGIN
+  SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
+  RETURN user_role = ANY(SELECT permissions__read FROM entities_metadata WHERE metadata_id = metadata_id) OR
+         '*' = ANY(SELECT permissions__read FROM entities_metadata WHERE metadata_id = metadata_id) OR
+         (SELECT COUNT(*) = 0 FROM entities_metadata WHERE metadata_id = metadata_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+CREATE OR REPLACE FUNCTION can_write_metadata(metadata_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  user_role TEXT;
+BEGIN
+  SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
+  RETURN user_role = ANY(SELECT permissions__write FROM entities_metadata WHERE metadata_id = metadata_id) OR
+         '*' = ANY(SELECT permissions__write FROM entities_metadata WHERE metadata_id = metadata_id) OR
+         (SELECT COUNT(*) = 0 FROM entities_metadata WHERE metadata_id = metadata_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+CREATE OR REPLACE FUNCTION can_execute_metadata(metadata_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  user_role TEXT;
+BEGIN
+  SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
+  RETURN user_role = ANY(SELECT permissions__execute FROM entities_metadata WHERE metadata_id = metadata_id) OR
+         '*' = ANY(SELECT permissions__execute FROM entities_metadata WHERE metadata_id = metadata_id) OR
+         (SELECT COUNT(*) = 0 FROM entities_metadata WHERE metadata_id = metadata_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Policy for select: Allow authenticated users to read metadata based on their role
+CREATE POLICY entities_metadata_select_policy ON entities_metadata
+    FOR SELECT USING (can_read_metadata(metadata_id));
+
+-- Policy for insert: Allow authenticated users to insert metadata if they have write permission
+CREATE POLICY entities_metadata_insert_policy ON entities_metadata
+    FOR INSERT WITH CHECK (can_write_metadata(metadata_id));
+
+-- Policy for update: Allow authenticated users to update metadata if they have write permission
+CREATE POLICY entities_metadata_update_policy ON entities_metadata
+    FOR UPDATE USING (can_write_metadata(metadata_id));
+
+-- Policy for delete: Allow authenticated users to delete metadata if they have write permission
+CREATE POLICY entities_metadata_delete_policy ON entities_metadata
+    FOR DELETE USING (can_write_metadata(metadata_id));
+
