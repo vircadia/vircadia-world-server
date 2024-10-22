@@ -67,21 +67,21 @@ INSERT INTO entities (
     general__type,
     general__semantic_version,
     general__transform,
-    babylonjs__script_persistent_scripts,
+    babylonjs__script_local_scripts,
     permissions__read,
     permissions__write,
     permissions__execute
 ) VALUES (
     '00000000-0000-0000-0000-000000000001',
-    'World Seed Entity',
+    'boot_to_vircadia_world',
     'MODEL',
     '1.0.0',
     ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
     ARRAY[
         ROW(
-            'https://example.com/world-seed-script.js',
-            'scripts/world-seed-script.js',
-            'https://github.com/your-org/world-scripts'
+            'https://raw.githubusercontent.com/vircadia/vircadia-world-sdk-ts/refs/heads/master/seed/babylon/seed.ts',
+            'seed/babylon/seed.ts',
+            'https://github.com/vircadia/vircadia-world-sdk-ts/blob/master/seed/babylon/seed.ts'
         )::script_source
     ],
     ARRAY['*'],  -- All roles can read
