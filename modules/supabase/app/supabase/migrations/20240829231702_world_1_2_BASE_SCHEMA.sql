@@ -58,6 +58,11 @@ CREATE TABLE entities (
   general__transform transform NOT NULL DEFAULT ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
   general__parent_entity_id UUID,
   
+  -- Add permissions fields
+  permissions__read TEXT[],
+  permissions__write TEXT[],
+  permissions__execute TEXT[],
+  
   babylonjs__mesh_is_instance BOOLEAN DEFAULT FALSE,
   babylonjs__mesh_instance_of_id UUID,
   babylonjs__mesh_material_id UUID,
@@ -245,18 +250,53 @@ CREATE INDEX idx_entities_type_created_at ON entities(general__type, general__cr
 -- RLS for entities
 ALTER TABLE entities ENABLE ROW LEVEL SECURITY;
 
--- Policy for select: Allow all authenticated users to read all entities
+-- Policy for select: Allow authenticated users to read entities based on their role
 CREATE POLICY entities_select_policy ON entities
-    FOR SELECT USING (auth.role() = 'authenticated');
+    FOR SELECT USING (can_read(general__uuid));
 
--- Policy for insert: Allow authenticated users to insert entities
+-- Policy for insert: Allow authenticated users to insert entities if they have write permission
 CREATE POLICY entities_insert_policy ON entities
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+    FOR INSERT WITH CHECK (can_write(general__uuid));
 
--- Policy for update: Allow authenticated users to update entities
+-- Policy for update: Allow authenticated users to update entities if they have write permission
 CREATE POLICY entities_update_policy ON entities
-    FOR UPDATE USING (auth.role() = 'authenticated');
+    FOR UPDATE USING (can_write(general__uuid));
 
--- Policy for delete: Allow authenticated users to delete entities
+-- Policy for delete: Allow authenticated users to delete entities if they have write permission
 CREATE POLICY entities_delete_policy ON entities
-    FOR DELETE USING (auth.role() = 'authenticated');
+    FOR DELETE USING (can_write(general__uuid));
+
+-- Functions to check permissions
+
+CREATE OR REPLACE FUNCTION can_read(entity_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  user_role TEXT;
+BEGIN
+  SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
+  RETURN user_role = ANY(SELECT permissions__read FROM entities WHERE general__uuid = entity_id) OR
+         '*' = ANY(SELECT permissions__read FROM entities WHERE general__uuid = entity_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+CREATE OR REPLACE FUNCTION can_write(entity_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  user_role TEXT;
+BEGIN
+  SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
+  RETURN user_role = ANY(SELECT permissions__write FROM entities WHERE general__uuid = entity_id) OR
+         '*' = ANY(SELECT permissions__write FROM entities WHERE general__uuid = entity_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+CREATE OR REPLACE FUNCTION can_execute(entity_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  user_role TEXT;
+BEGIN
+  SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
+  RETURN user_role = ANY(SELECT permissions__execute FROM entities WHERE general__uuid = entity_id) OR
+         '*' = ANY(SELECT permissions__execute FROM entities WHERE general__uuid = entity_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';

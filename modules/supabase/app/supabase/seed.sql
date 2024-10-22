@@ -60,6 +60,12 @@ BEGIN
     RAISE NOTICE 'IMPORTANT: Remember to change the default admin password after first login!';
 END $$;
 
+-- Insert default permissions for existing roles
+INSERT INTO role_permissions (role, read, write, execute) VALUES
+('guest', true, false, false),
+('member', true, true, false),
+('admin', true, true, true);
+
 -- Add the root "seed" entity
 INSERT INTO entities (
     general__uuid,
