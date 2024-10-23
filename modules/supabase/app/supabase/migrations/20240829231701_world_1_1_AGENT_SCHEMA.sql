@@ -105,3 +105,7 @@ CREATE POLICY agent_profiles_delete_policy ON agent_profiles FOR DELETE USING (h
 -- 
 -- 
 
+
+CREATE POLICY agent_profiles_read_for_permission_check
+ON agent_profiles FOR SELECT
+USING (true);

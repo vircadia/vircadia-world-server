@@ -254,34 +254,37 @@ CREATE OR REPLACE FUNCTION can_read(entity_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   user_role TEXT;
+  permission_array TEXT[];
 BEGIN
   SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
-  RETURN user_role = ANY(SELECT permissions__read FROM entities WHERE general__uuid = entity_id) OR
-         '*' = ANY(SELECT permissions__read FROM entities WHERE general__uuid = entity_id);
+  SELECT permissions__read INTO permission_array FROM entities WHERE general__uuid = entity_id;
+  RETURN user_role = ANY(permission_array) OR '*' = ANY(permission_array);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
 CREATE OR REPLACE FUNCTION can_write(entity_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   user_role TEXT;
+  permission_array TEXT[];
 BEGIN
   SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
-  RETURN user_role = ANY(SELECT permissions__write FROM entities WHERE general__uuid = entity_id) OR
-         '*' = ANY(SELECT permissions__write FROM entities WHERE general__uuid = entity_id);
+  SELECT permissions__write INTO permission_array FROM entities WHERE general__uuid = entity_id;
+  RETURN user_role = ANY(permission_array) OR '*' = ANY(permission_array);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
 CREATE OR REPLACE FUNCTION can_execute(entity_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   user_role TEXT;
+  permission_array TEXT[];
 BEGIN
   SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
-  RETURN user_role = ANY(SELECT permissions__execute FROM entities WHERE general__uuid = entity_id) OR
-         '*' = ANY(SELECT permissions__execute FROM entities WHERE general__uuid = entity_id);
+  SELECT permissions__execute INTO permission_array FROM entities WHERE general__uuid = entity_id;
+  RETURN user_role = ANY(permission_array) OR '*' = ANY(permission_array);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
 -- RLS for entities
 ALTER TABLE entities ENABLE ROW LEVEL SECURITY;
@@ -340,37 +343,40 @@ CREATE OR REPLACE FUNCTION can_read_metadata(metadata_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   user_role TEXT;
+  permission_array TEXT[];
 BEGIN
   SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
-  RETURN user_role = ANY(SELECT permissions__read FROM entities_metadata WHERE metadata_id = metadata_id) OR
-         '*' = ANY(SELECT permissions__read FROM entities_metadata WHERE metadata_id = metadata_id) OR
+  SELECT permissions__read INTO permission_array FROM entities_metadata WHERE metadata_id = metadata_id;
+  RETURN user_role = ANY(permission_array) OR '*' = ANY(permission_array) OR
          (SELECT COUNT(*) = 0 FROM entities_metadata WHERE metadata_id = metadata_id);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
 CREATE OR REPLACE FUNCTION can_write_metadata(metadata_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   user_role TEXT;
+  permission_array TEXT[];
 BEGIN
   SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
-  RETURN user_role = ANY(SELECT permissions__write FROM entities_metadata WHERE metadata_id = metadata_id) OR
-         '*' = ANY(SELECT permissions__write FROM entities_metadata WHERE metadata_id = metadata_id) OR
+  SELECT permissions__write INTO permission_array FROM entities_metadata WHERE metadata_id = metadata_id;
+  RETURN user_role = ANY(permission_array) OR '*' = ANY(permission_array) OR
          (SELECT COUNT(*) = 0 FROM entities_metadata WHERE metadata_id = metadata_id);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
 CREATE OR REPLACE FUNCTION can_execute_metadata(metadata_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   user_role TEXT;
+  permission_array TEXT[];
 BEGIN
   SELECT role INTO user_role FROM agent_profiles WHERE id = auth.uid();
-  RETURN user_role = ANY(SELECT permissions__execute FROM entities_metadata WHERE metadata_id = metadata_id) OR
-         '*' = ANY(SELECT permissions__execute FROM entities_metadata WHERE metadata_id = metadata_id) OR
+  SELECT permissions__execute INTO permission_array FROM entities_metadata WHERE metadata_id = metadata_id;
+  RETURN user_role = ANY(permission_array) OR '*' = ANY(permission_array) OR
          (SELECT COUNT(*) = 0 FROM entities_metadata WHERE metadata_id = metadata_id);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
 -- Policy for select: Allow authenticated users to read metadata based on their role
 CREATE POLICY entities_metadata_select_policy ON entities_metadata
@@ -387,4 +393,7 @@ CREATE POLICY entities_metadata_update_policy ON entities_metadata
 -- Policy for delete: Allow authenticated users to delete metadata if they have write permission
 CREATE POLICY entities_metadata_delete_policy ON entities_metadata
     FOR DELETE USING (can_write_metadata(metadata_id));
+
+
+
 
