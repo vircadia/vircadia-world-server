@@ -41,6 +41,7 @@ CREATE TYPE transform AS (
 );
 
 CREATE TYPE script_source AS (
+    transpiled_script TEXT,
     raw_file_url TEXT,
     git_file_path TEXT,
     git_repo_url TEXT
@@ -394,6 +395,45 @@ CREATE POLICY entities_metadata_update_policy ON entities_metadata
 CREATE POLICY entities_metadata_delete_policy ON entities_metadata
     FOR DELETE USING (can_write_metadata(metadata_id));
 
+-- Add after your other function definitions but before the RLS policies
+CREATE OR REPLACE FUNCTION compile_typescript()
+RETURNS TRIGGER AS $$
+DECLARE
+  response_status INT;
+  response_body JSONB;
+BEGIN
+  -- Make synchronous HTTP request to the edge function and wait for response
+  SELECT
+    status, content::jsonb INTO response_status, response_body
+  FROM
+    net.http_post(
+      url := current_setting('app.settings.supabase_url') || '/functions/v1/compile-script',
+      headers := jsonb_build_object(
+        'Authorization', concat('Bearer ', current_setting('app.settings.service_role_key')),
+        'Content-Type', 'application/json'
+      ),
+      body := jsonb_build_object('record', row_to_json(NEW))
+    );
 
+  -- Check if the request was successful
+  IF response_status != 200 THEN
+    RAISE EXCEPTION 'Edge function error: %', response_body->>'error';
+  END IF;
 
+  -- Update NEW with the compiled scripts from the response
+  NEW.babylonjs__script_local_scripts := response_body->'local_scripts';
+  NEW.babylonjs__script_persistent_scripts := response_body->'persistent_scripts';
 
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create the trigger (add this before the RLS policies)
+CREATE TRIGGER trigger_compile_typescript
+  BEFORE UPDATE ON entities
+  FOR EACH ROW
+  WHEN (
+    NEW.babylonjs__script_local_scripts IS DISTINCT FROM OLD.babylonjs__script_local_scripts OR
+    NEW.babylonjs__script_persistent_scripts IS DISTINCT FROM OLD.babylonjs__script_persistent_scripts
+  )
+  EXECUTE FUNCTION compile_typescript();

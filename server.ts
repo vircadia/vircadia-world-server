@@ -1,3 +1,4 @@
+import { bundle } from "jsr:@deno/emit";
 import { parseArgs } from "jsr:@std/cli";
 import { load } from "jsr:@std/dotenv";
 import { CaddyManager, ProxyConfig } from "./modules/caddy/caddy_manager.ts";
@@ -19,6 +20,8 @@ export enum CONFIG_VARIABLE {
         `${ENVIRONMENT_PREFIX}_${ENVIRONMENT_SERVER_PREFIX}_CADDY_HOST`,
     SERVER_CADDY_PORT =
         `${ENVIRONMENT_PREFIX}_${ENVIRONMENT_SERVER_PREFIX}_CADDY_PORT`,
+    SERVER_HOST = `${ENVIRONMENT_PREFIX}_${ENVIRONMENT_SERVER_PREFIX}_HOST`,
+    SERVER_PORT = `${ENVIRONMENT_PREFIX}_${ENVIRONMENT_SERVER_PREFIX}_PORT`,
     FORCE_RESTART_SUPABASE =
         `${ENVIRONMENT_PREFIX}_${ENVIRONMENT_SERVER_PREFIX}_FORCE_RESTART_SUPABASE`,
 }
@@ -35,6 +38,7 @@ async function init() {
     log({ message: "Starting Vircadia World Server", type: "info" });
 
     await startSupabase(debugMode);
+    await startDenoServer(debugMode);
     const caddyRoutes = await setupCaddyRoutes(debugMode);
     await startCaddyServer(caddyRoutes, debugMode);
 }
@@ -118,6 +122,15 @@ async function setupCaddyRoutes(
             to: `localhost:${supabaseStatus.inbucket.port}${supabaseStatus.inbucket.path}`,
             name: "Supabase Inbucket",
         },
+        [Server.E_ProxySubdomain.SERVER_API]: {
+            subdomain: `${Server.E_ProxySubdomain.SERVER_API}.${
+                config[CONFIG_VARIABLE.SERVER_CADDY_HOST]
+            }`,
+            to: `localhost:${
+                config[CONFIG_VARIABLE.SERVER_CADDY_PORT]
+            }/${Server.E_SERVER_API_ROUTE.BUNDLE_SCRIPTS}`,
+            name: "Server API",
+        },
     };
 }
 
@@ -160,12 +173,181 @@ async function startCaddyServer(
     }
 }
 
+async function startDenoServer(debugMode: boolean) {
+    log({ message: "Starting Deno HTTP server", type: "info" });
+
+    const host = config[CONFIG_VARIABLE.SERVER_HOST];
+    const port = config[CONFIG_VARIABLE.SERVER_PORT];
+    const ac = new AbortController();
+
+    // Constants for bundling
+    const BUNDLE_TIMEOUT = 60000; // 60 seconds
+    const MAX_URLS = 50; // Maximum number of URLs to process
+
+    const server = Deno.serve({
+        port,
+        hostname: host,
+        signal: ac.signal,
+        onListen({ hostname, port }) {
+            log({
+                message:
+                    `Deno HTTP server running at http://${hostname}:${port}, test available endpoints locally:`,
+                type: "success",
+            });
+            log({
+                message:
+                    `http://${hostname}:${port}/${Server.E_SERVER_API_ROUTE.BUNDLE_SCRIPTS}`,
+                type: "success",
+            });
+        },
+        handler: async (req) => {
+            const url = new URL(req.url);
+
+            // Basic routing
+            switch (url.pathname) {
+                case `/${Server.E_SERVER_API_ROUTE.BUNDLE_SCRIPTS}`:
+                    try {
+                        const { script_urls, script_raw } = Server
+                            .S_SERVER_API_REQUEST_BUNDLE_SCRIPTS.parse(
+                                await req.json(),
+                            );
+
+                        if (!Array.isArray(script_urls)) {
+                            return new Response(
+                                JSON.stringify(
+                                    Server.S_SERVER_API_RESPONSE_BUNDLE_SCRIPTS
+                                        .parse({
+                                            error:
+                                                "URLs must be provided as an array",
+                                        }),
+                                ),
+                                {
+                                    status: 400,
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                    },
+                                },
+                            );
+                        }
+
+                        if (script_urls.length > MAX_URLS) {
+                            return new Response(
+                                JSON.stringify(
+                                    Server.S_SERVER_API_RESPONSE_BUNDLE_SCRIPTS
+                                        .parse({
+                                            error:
+                                                `Cannot process more than ${MAX_URLS} URLs at once`,
+                                        }),
+                                ),
+                                {
+                                    status: 400,
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                    },
+                                },
+                            );
+                        }
+
+                        const compiledScripts = await Promise.all(
+                            script_urls.map(async (url: string) => {
+                                try {
+                                    const timeoutPromise = new Promise(
+                                        (_, reject) => {
+                                            setTimeout(
+                                                () =>
+                                                    reject(
+                                                        new Error(
+                                                            `Bundling timed out for ${url}`,
+                                                        ),
+                                                    ),
+                                                BUNDLE_TIMEOUT,
+                                            );
+                                        },
+                                    );
+
+                                    const bundlePromise = bundle(new URL(url), {
+                                        allowRemote: true,
+                                    });
+
+                                    const result = await Promise.race([
+                                        bundlePromise,
+                                        timeoutPromise,
+                                    ]);
+
+                                    console.info("### Result", result);
+
+                                    return {
+                                        url,
+                                        code: result.code,
+                                        size: result.code.length,
+                                    };
+                                } catch (error) {
+                                    console.error(
+                                        `Error bundling script ${url}:`,
+                                        error,
+                                    );
+                                    return {
+                                        url,
+                                        error:
+                                            `Bundling error: ${error.message}`,
+                                        stack: debugMode
+                                            ? error.stack
+                                            : undefined,
+                                    };
+                                }
+                            }),
+                        );
+
+                        return new Response(
+                            JSON.stringify(
+                                Server.S_SERVER_API_RESPONSE_BUNDLE_SCRIPTS
+                                    .parse(
+                                        {
+                                            scripts: compiledScripts,
+                                            timestamp: new Date().toISOString(),
+                                        },
+                                    ),
+                            ),
+                            {
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Cache-Control": "public, max-age=3600",
+                                },
+                            },
+                        );
+                    } catch (error) {
+                        console.error("Server error:", error);
+                        return new Response(
+                            JSON.stringify(
+                                Server.S_SERVER_API_RESPONSE_BUNDLE_SCRIPTS
+                                    .parse({
+                                        error: error.message,
+                                    }),
+                            ),
+                            {
+                                status: 500,
+                                headers: { "Content-Type": "application/json" },
+                            },
+                        );
+                    }
+                default:
+                    return new Response("Not Found", { status: 404 });
+            }
+        },
+    });
+
+    // Wait for server to complete
+    await server.finished;
+}
+
 await init();
 
 export function loadConfig(): {
     [CONFIG_VARIABLE.SERVER_DEBUG]: boolean;
     [CONFIG_VARIABLE.SERVER_CADDY_HOST]: string;
     [CONFIG_VARIABLE.SERVER_CADDY_PORT]: number;
+    [CONFIG_VARIABLE.SERVER_PORT]: number;
+    [CONFIG_VARIABLE.SERVER_HOST]: string;
     [CONFIG_VARIABLE.FORCE_RESTART_SUPABASE]: boolean;
 } {
     // Load .env file
@@ -185,6 +367,14 @@ export function loadConfig(): {
             args.caddyPort ||
             "3010",
     );
+    const serverPort = parseInt(
+        Deno.env.get(CONFIG_VARIABLE.SERVER_PORT) ||
+            args.serverPort ||
+            "3020",
+    );
+    const serverHost = Deno.env.get(CONFIG_VARIABLE.SERVER_HOST) ||
+        args.serverHost ||
+        "localhost";
     const forceRestartSupabase =
         Deno.env.get(CONFIG_VARIABLE.FORCE_RESTART_SUPABASE) === "true" ||
         false;
@@ -192,6 +382,8 @@ export function loadConfig(): {
         [CONFIG_VARIABLE.SERVER_DEBUG]: debugMode,
         [CONFIG_VARIABLE.SERVER_CADDY_HOST]: caddyHost,
         [CONFIG_VARIABLE.SERVER_CADDY_PORT]: caddyPort,
+        [CONFIG_VARIABLE.SERVER_PORT]: serverPort,
+        [CONFIG_VARIABLE.SERVER_HOST]: serverHost,
         [CONFIG_VARIABLE.FORCE_RESTART_SUPABASE]: forceRestartSupabase,
     };
 }
