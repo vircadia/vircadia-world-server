@@ -12,4 +12,6 @@
     reverse_proxy @supabase-studio_localhost localhost:54323
     @supabase-inbucket_localhost host supabase-inbucket.localhost
     reverse_proxy @supabase-inbucket_localhost localhost:54324
+    @server-api_localhost host server-api.localhost
+    reverse_proxy @server-api_localhost localhost:3010/api/bundle-scripts
 }
